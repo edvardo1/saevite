@@ -1,0 +1,5 @@
+*.obj
+include/
+obj
+bin
+*.ttf
