@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "ste_text.h"
+#include "saevite_text.h"
 
 Void printPieceString(String8 string) {
 	Usize i = 0;
@@ -30,7 +30,7 @@ Void printPieceString(String8 string) {
 	printf("»");
 }
 
-Void ste_printBuffer(ste_Buffer *buffer) {
+Void saevite_printBuffer(saevite_Buffer *buffer) {
 	Usize i = 0;
 	printf("all pieces:\n");
 	for (i = 0; i < buffer->allPieces.len; i++) {
@@ -48,7 +48,7 @@ Void ste_printBuffer(ste_Buffer *buffer) {
 	printf("\n");
 }
 
-Void ste_stringFromBuffer(ste_Buffer *buffer, String8 *string) {
+Void saevite_stringFromBuffer(saevite_Buffer *buffer, String8 *string) {
 	Uint currentPiecesIndex = 0;
 	Uint pieceIndex = 0;
 	Uint totalLength = 0;
@@ -80,7 +80,7 @@ Void ste_stringFromBuffer(ste_Buffer *buffer, String8 *string) {
 	assert(string->len == totalLength);
 }
 
-Void ste_printBufferContents(ste_Buffer *buffer) {
+Void saevite_printBufferContents(saevite_Buffer *buffer) {
 	Usize i = 0;
 	for (i = 0; i < buffer->currentPieces.len; i++) {
 		printf(
@@ -90,7 +90,7 @@ Void ste_printBufferContents(ste_Buffer *buffer) {
 	}
 }
 
-Int ste__buffer_getPieceInfoFromPosition(ste_Buffer *buffer, Uint position, Uint *pieceIndex, Uint *len) {
+Int saevite__buffer_getPieceInfoFromPosition(saevite_Buffer *buffer, Uint position, Uint *pieceIndex, Uint *len) {
 	Uint index = 0;
 	String8 str = {0};
 	Uint cumPosition = position;
@@ -114,14 +114,14 @@ Int ste__buffer_getPieceInfoFromPosition(ste_Buffer *buffer, Uint position, Uint
 	return 1;
 }
 
-Void ste_pieceNew(ste_Buffer *buffer, String8 str, Uint *index) {
+Void saevite_pieceNew(saevite_Buffer *buffer, String8 str, Uint *index) {
 	daAppend(&buffer->allPieces, str);
 	if (index != NULL) {
 		*index = buffer->allPieces.len - 1;
 	}
 }
 
-Void ste_pieceInsert(ste_Buffer *buffer, Uint currentPiecesPosition, Uint allPiecesIndex) {
+Void saevite_pieceInsert(saevite_Buffer *buffer, Uint currentPiecesPosition, Uint allPiecesIndex) {
 	Usize i = 0;
 	assert(allPiecesIndex < buffer->allPieces.len);
 	daAppendZ(&buffer->currentPieces);
@@ -136,33 +136,33 @@ Void ste_pieceInsert(ste_Buffer *buffer, Uint currentPiecesPosition, Uint allPie
 
 	daAppend(
 		&buffer->actions,
-		ste_makeInsertAction(
+		saevite_makeInsertAction(
 			currentPiecesPosition,
 			allPiecesIndex
 		)
 	);
 }
 
-Void ste_newPieceInsert(ste_Buffer *buffer, Uint currentPiecesPosition, String8 string) {
+Void saevite_newPieceInsert(saevite_Buffer *buffer, Uint currentPiecesPosition, String8 string) {
 	Uint pieceIndex = 0;
-	ste_pieceNew(buffer, string, &pieceIndex);
-	ste_pieceInsert(buffer, currentPiecesPosition, pieceIndex);
+	saevite_pieceNew(buffer, string, &pieceIndex);
+	saevite_pieceInsert(buffer, currentPiecesPosition, pieceIndex);
 }
 
-Void ste__buffer_pieceGetString(ste_Buffer *buffer, Uint currentPiecesPosition, String8 *str) {
+Void saevite__buffer_pieceGetString(saevite_Buffer *buffer, Uint currentPiecesPosition, String8 *str) {
 	*str = buffer->allPieces.items[
 		buffer->currentPieces.items[currentPiecesPosition]
 	];
 }
 
-Void ste__buffer_pieceReplace(
-	ste_Buffer *buffer,
+Void saevite__buffer_pieceReplace(
+	saevite_Buffer *buffer,
 	Uint currentPiecesPosition,
 	Uint allPiecesIndex
 ) {
 	daAppend(
 		&buffer->actions,
-		ste_makeReplaceAction(
+		saevite_makeReplaceAction(
 			currentPiecesPosition,
 			buffer->currentPieces.items[currentPiecesPosition],
 			allPiecesIndex
@@ -171,13 +171,13 @@ Void ste__buffer_pieceReplace(
 	buffer->currentPieces.items[currentPiecesPosition] = allPiecesIndex;
 }
 
-Void ste__buffer_newPieceReplace(ste_Buffer *buffer, Uint currentPiecesPosition, String8 string) {
+Void saevite__buffer_newPieceReplace(saevite_Buffer *buffer, Uint currentPiecesPosition, String8 string) {
 	Uint pieceIndex = 0;
-	ste_pieceNew(buffer, string, &pieceIndex);
-	ste__buffer_pieceReplace(buffer, currentPiecesPosition, pieceIndex);
+	saevite_pieceNew(buffer, string, &pieceIndex);
+	saevite__buffer_pieceReplace(buffer, currentPiecesPosition, pieceIndex);
 }
 
-Void ste__buffer_pieceRemove(ste_Buffer *buffer, Uint currentPiecesPosition) {
+Void saevite__buffer_pieceRemove(saevite_Buffer *buffer, Uint currentPiecesPosition) {
 	memmove(
 		&buffer->currentPieces.items[currentPiecesPosition],
 		&buffer->currentPieces.items[currentPiecesPosition + 1],
@@ -187,39 +187,39 @@ Void ste__buffer_pieceRemove(ste_Buffer *buffer, Uint currentPiecesPosition) {
 	buffer->currentPieces.len -= 1;
 	daAppend(
 		&buffer->actions,
-		ste_makeRemoveAction(currentPiecesPosition, currentPiecesPosition)
+		saevite_makeRemoveAction(currentPiecesPosition, currentPiecesPosition)
 	);
 }
 
-Void ste_insertString(ste_Buffer *buffer, Uint position, String8 str) {
+Void saevite_insertString(saevite_Buffer *buffer, Uint position, String8 str) {
 	String8 oldStr = {0};
 	Uint index = 0;
 	Uint pieceIndex = 0, len = 0;
 	Uint allPiecesIndex = 0;
 
-	buffer->mode = ste_BufferMode_None;
+	buffer->mode = saevite_BufferMode_None;
 
-	ste__buffer_getPieceInfoFromPosition(buffer, position, &pieceIndex, &len);
+	saevite__buffer_getPieceInfoFromPosition(buffer, position, &pieceIndex, &len);
 	allPiecesIndex = buffer->currentPieces.items[pieceIndex];
-	ste__buffer_pieceGetString(buffer, pieceIndex, &oldStr);
+	saevite__buffer_pieceGetString(buffer, pieceIndex, &oldStr);
 
-	ste__buffer_pieceRemove(buffer, pieceIndex);
+	saevite__buffer_pieceRemove(buffer, pieceIndex);
 	if (len == 0) {
-		ste_pieceInsert(buffer, pieceIndex, allPiecesIndex);
+		saevite_pieceInsert(buffer, pieceIndex, allPiecesIndex);
 	} else if (oldStr.len - len > 0) {
-		ste_newPieceInsert(buffer, pieceIndex, strSlice(oldStr, len, oldStr.len - len));
+		saevite_newPieceInsert(buffer, pieceIndex, strSlice(oldStr, len, oldStr.len - len));
 	}
 
-	ste_newPieceInsert(buffer, pieceIndex, str);
+	saevite_newPieceInsert(buffer, pieceIndex, str);
 
 	if (len == oldStr.len) {
-		ste_pieceInsert(buffer, pieceIndex, allPiecesIndex);
+		saevite_pieceInsert(buffer, pieceIndex, allPiecesIndex);
 	} else if (len > 0) {
-		ste_newPieceInsert(buffer, pieceIndex, strSlice(oldStr, 0, len));
+		saevite_newPieceInsert(buffer, pieceIndex, strSlice(oldStr, 0, len));
 	}
 }
 
-Void ste_insertChar(ste_Buffer *buffer, Uint position, Char c) {
+Void saevite_insertChar(saevite_Buffer *buffer, Uint position, Char c) {
 	String8 oldStr = {0};
 	String8 str = {0};
 	Uint index = 0;
@@ -229,7 +229,7 @@ Void ste_insertChar(ste_Buffer *buffer, Uint position, Char c) {
 	Int err = 0;
 
 	if (
-		buffer->mode == ste_BufferMode_InsertingChars &&
+		buffer->mode == saevite_BufferMode_InsertingChars &&
 		position == buffer->lastPosition + 1
 	) {
 		buffer->allPieces.items[buffer->lastCharAllPiecesIndex].buf = 
@@ -247,49 +247,49 @@ Void ste_insertChar(ste_Buffer *buffer, Uint position, Char c) {
 		assert(str.buf != NULL);
 		str.buf[0] = c;
 		str.len = 1;
-		ste_pieceNew(buffer, str, &cpIndex);
+		saevite_pieceNew(buffer, str, &cpIndex);
 
-		buffer->mode = ste_BufferMode_InsertingChars;
+		buffer->mode = saevite_BufferMode_InsertingChars;
 		buffer->lastPosition = position;
 
 		if (buffer->currentPieces.len > 0) {
-			err = ste__buffer_getPieceInfoFromPosition(buffer, position, &pieceIndex, &len);
+			err = saevite__buffer_getPieceInfoFromPosition(buffer, position, &pieceIndex, &len);
 		}
 
 		if (buffer->currentPieces.len <= 0 || err) {
 			if (position == 0) {
-				ste_pieceInsert(buffer, 0, cpIndex);
+				saevite_pieceInsert(buffer, 0, cpIndex);
 				buffer->lastCharAllPiecesIndex = buffer->currentPieces.items[0];
 			} else {
-				ste_pieceInsert(buffer, buffer->currentPieces.len, cpIndex);
+				saevite_pieceInsert(buffer, buffer->currentPieces.len, cpIndex);
 				buffer->lastCharAllPiecesIndex = buffer->allPieces.len - 1;
 			}
 		} else {
 			allPiecesIndex = buffer->currentPieces.items[pieceIndex];
-			ste__buffer_pieceGetString(buffer, pieceIndex, &oldStr);
+			saevite__buffer_pieceGetString(buffer, pieceIndex, &oldStr);
 
-			ste__buffer_pieceRemove(buffer, pieceIndex);
+			saevite__buffer_pieceRemove(buffer, pieceIndex);
 			if (len == 0) {
-				ste_pieceInsert(buffer, pieceIndex, allPiecesIndex);
+				saevite_pieceInsert(buffer, pieceIndex, allPiecesIndex);
 			} else if (oldStr.len - len > 0) {
-				ste_newPieceInsert(buffer, pieceIndex, strSlice(oldStr, len, oldStr.len - len));
+				saevite_newPieceInsert(buffer, pieceIndex, strSlice(oldStr, len, oldStr.len - len));
 			}
 
-			ste_pieceInsert(buffer, pieceIndex, cpIndex);
+			saevite_pieceInsert(buffer, pieceIndex, cpIndex);
 			buffer->lastCharAllPiecesIndex = buffer->currentPieces.items[pieceIndex];
 
 			if (len == oldStr.len) {
-				ste_pieceInsert(buffer, pieceIndex, allPiecesIndex);
+				saevite_pieceInsert(buffer, pieceIndex, allPiecesIndex);
 			} else if (len > 0) {
-				ste_newPieceInsert(buffer, pieceIndex, strSlice(oldStr, 0, len));
+				saevite_newPieceInsert(buffer, pieceIndex, strSlice(oldStr, 0, len));
 			}
 		}
 	}
 }
 
-Void ste_deleteSelection(ste_Buffer *buffer, Uint position, Uint len) {
+Void saevite_deleteSelection(saevite_Buffer *buffer, Uint position, Uint len) {
 	/* @todo @optimize
-	 * ste__buffer_getPieceInfoFromPosition does the same work twice
+	 * saevite__buffer_getPieceInfoFromPosition does the same work twice
 	 */
 	Uint count = 0;
 	Uint firstPieceIndex = 0, lastPieceIndex = 0;
@@ -297,91 +297,91 @@ Void ste_deleteSelection(ste_Buffer *buffer, Uint position, Uint len) {
 	String8 firstStr = {0}, lastStr = {0};
 	String8 newFirstStr = {0}, newLastStr = {0};
 
-	buffer->mode = ste_BufferMode_None;
+	buffer->mode = saevite_BufferMode_None;
 
-	ste__buffer_getPieceInfoFromPosition(buffer, position, &firstPieceIndex, &firstLen);
-	ste__buffer_getPieceInfoFromPosition(buffer, position + len, &lastPieceIndex, &lastLen);
-	ste__buffer_pieceGetString(buffer, firstPieceIndex, &firstStr);
-	ste__buffer_pieceGetString(buffer, lastPieceIndex, &lastStr);
+	saevite__buffer_getPieceInfoFromPosition(buffer, position, &firstPieceIndex, &firstLen);
+	saevite__buffer_getPieceInfoFromPosition(buffer, position + len, &lastPieceIndex, &lastLen);
+	saevite__buffer_pieceGetString(buffer, firstPieceIndex, &firstStr);
+	saevite__buffer_pieceGetString(buffer, lastPieceIndex, &lastStr);
 
 	for (count = 0; count < lastPieceIndex - firstPieceIndex + 1; count++) {
-		ste__buffer_pieceRemove(buffer, firstPieceIndex);
+		saevite__buffer_pieceRemove(buffer, firstPieceIndex);
 	}
 
 	newFirstStr = strSlice(firstStr, 0, firstLen);
 	newLastStr = strSlice(lastStr, lastLen, lastStr.len - lastLen);
 
 	if (newLastStr.len > 0) {
-		ste_newPieceInsert(buffer, firstPieceIndex, newLastStr);
+		saevite_newPieceInsert(buffer, firstPieceIndex, newLastStr);
 	}
 
 	if (newFirstStr.len > 0) {
-		ste_newPieceInsert(buffer, firstPieceIndex, newFirstStr);
+		saevite_newPieceInsert(buffer, firstPieceIndex, newFirstStr);
 	}
 }
 
-Int ste_deleteChar(ste_Buffer *buffer, Uint position) {
+Int saevite_deleteChar(saevite_Buffer *buffer, Uint position) {
 	Uint pieceIndex = 0, len = 0, lastBegin = 0;
 	String8 str = {0};
 
-	buffer->mode = ste_BufferMode_None;
+	buffer->mode = saevite_BufferMode_None;
 
 	if (buffer->currentPieces.len <= 0) {
 		return 1;
 	} else {
-		ste__buffer_getPieceInfoFromPosition(buffer, position, &pieceIndex, &len);
-		ste__buffer_pieceGetString(buffer, pieceIndex, &str);
+		saevite__buffer_getPieceInfoFromPosition(buffer, position, &pieceIndex, &len);
+		saevite__buffer_pieceGetString(buffer, pieceIndex, &str);
 	
-		ste__buffer_pieceRemove(buffer, pieceIndex);
+		saevite__buffer_pieceRemove(buffer, pieceIndex);
 		lastBegin = len + 1;
 		if (lastBegin - str.len > 0) {
-			ste_newPieceInsert(buffer, pieceIndex, strSlice(str, lastBegin, str.len - lastBegin));
+			saevite_newPieceInsert(buffer, pieceIndex, strSlice(str, lastBegin, str.len - lastBegin));
 		}
 		if (len > 0) {
-			ste_newPieceInsert(buffer, pieceIndex, strSlice(str, 0, len));
+			saevite_newPieceInsert(buffer, pieceIndex, strSlice(str, 0, len));
 		}
 
 		return 0;
 	}
 }
 
-ste_Action ste__action(Uint currentPiecesIndex, Uint allPiecesBeforeIndex, Uint allPiecesAfterIndex) {
-	ste_Action action = {0};
+saevite_Action saevite__action(Uint currentPiecesIndex, Uint allPiecesBeforeIndex, Uint allPiecesAfterIndex) {
+	saevite_Action action = {0};
 	action.currentPiecesIndex = currentPiecesIndex;
 	action.allPiecesBeforeIndex = allPiecesBeforeIndex;
 	action.allPiecesAfterIndex = allPiecesAfterIndex;
 	return action;
 }
 
-ste_Action ste_makeUndoAction(Void) {
-	return ste__action((Uint)-1, 0, 0);
+saevite_Action saevite_makeUndoAction(Void) {
+	return saevite__action((Uint)-1, 0, 0);
 }
 
-ste_Action ste_makeReplaceAction(Uint currentPiecesIndex, Uint allPiecesBeforeIndex, Uint allPiecesAfterIndex) {
+saevite_Action saevite_makeReplaceAction(Uint currentPiecesIndex, Uint allPiecesBeforeIndex, Uint allPiecesAfterIndex) {
 	assert(currentPiecesIndex != (Uint)-1);
 	assert(allPiecesBeforeIndex != (Uint)-1);
 	assert(allPiecesAfterIndex != (Uint)-1);
-	return ste__action(currentPiecesIndex, allPiecesBeforeIndex, allPiecesAfterIndex);
+	return saevite__action(currentPiecesIndex, allPiecesBeforeIndex, allPiecesAfterIndex);
 }
 
-ste_Action ste_makeInsertAction(Uint currentPiecesIndex, Uint allPiecesAfterIndex) {
+saevite_Action saevite_makeInsertAction(Uint currentPiecesIndex, Uint allPiecesAfterIndex) {
 	assert(currentPiecesIndex != (Uint)-1);
 	assert(allPiecesAfterIndex != (Uint)-1);
-	return ste__action(currentPiecesIndex, (Uint)-1, allPiecesAfterIndex);
+	return saevite__action(currentPiecesIndex, (Uint)-1, allPiecesAfterIndex);
 }
 
-ste_Action ste_makeRemoveAction(Uint currentPiecesIndex, Uint allPiecesBeforeIndex) {
+saevite_Action saevite_makeRemoveAction(Uint currentPiecesIndex, Uint allPiecesBeforeIndex) {
 	assert(currentPiecesIndex != (Uint)-1);
 	assert(allPiecesBeforeIndex != (Uint)-1);
-	return ste__action(currentPiecesIndex, allPiecesBeforeIndex, (Uint)-1);
+	return saevite__action(currentPiecesIndex, allPiecesBeforeIndex, (Uint)-1);
 }
 
-Bool ste_actionIsUndo(ste_Action *action) {
+Bool saevite_actionIsUndo(saevite_Action *action) {
 	return action->currentPiecesIndex == (Uint)-1;
 }
 
-Bool ste_actionIsReplace(
-	ste_Action *action,
+Bool saevite_actionIsReplace(
+	saevite_Action *action,
 	Uint *currentPiecesIndex,
 	Uint *allPiecesBeforeIndex,
 	Uint *allPiecesAfterIndex
@@ -404,8 +404,8 @@ Bool ste_actionIsReplace(
 		action->allPiecesAfterIndex != (Uint)-1;
 }
 
-Bool ste_actionIsInsert(
-	ste_Action *action,
+Bool saevite_actionIsInsert(
+	saevite_Action *action,
 	Uint *currentPiecesIndex,
 	Uint *allPiecesBeforeIndex
 ) {
@@ -423,8 +423,8 @@ Bool ste_actionIsInsert(
 		action->allPiecesAfterIndex != (Uint)-1;
 }
 
-Bool ste_actionIsRemove(
-	ste_Action *action,
+Bool saevite_actionIsRemove(
+	saevite_Action *action,
 	Uint *currentPiecesIndex
 ) {
 	if (action->currentPiecesIndex != (Uint)-1 && currentPiecesIndex != NULL) {

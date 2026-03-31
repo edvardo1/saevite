@@ -8,7 +8,7 @@ CFLAGS = \
 SDLCFLAGS = $(shell pkg-config --cflags sdl3)
 SDLLIBS = $(shell pkg-config --libs sdl3)
 
-bin/ste: src/ste.c src/ste_text.c src/*.c include/acyacsl.h bin
+bin/saevite: src/saevite.c src/saevite_text.c src/*.c include/acyacsl.h bin
 	$(CC) $(CFLAGS) $(SDL_CFLAGS) -o $@ src/*.c $(SDLLIBS) -lm
 
 obj/stb_truetype.o: src/stb_truetype.c include/stb_truetype.h

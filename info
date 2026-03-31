@@ -1,15 +1,15 @@
 
 
-* ste_Buffer
+* saevite_Buffer
   handles text editing and undo
 
-  ste doesn't really use ste_Buffers since they don't come with cursors
+  saevite doesn't really use saevite_Buffers since they don't come with cursors
 reasoning for this:
-  other applications might want to use ste_Buffer, it wouldn't make any sense to have mutliple cursors, vi-keys or custom configurations for GUI text boxes, however, it would very much make sense to have those in a text editor, so ste_BufferWrapper handles that.
-  @todo it might be a good idea to externalize ste_Buffer onto a library and rename ste_BufferWrapper to ste_Buffer, as those names make more sense.
+  other applications might want to use saevite_Buffer, it wouldn't make any sense to have mutliple cursors, vi-keys or custom configurations for GUI text boxes, however, it would very much make sense to have those in a text editor, so saevite_BufferWrapper handles that.
+  @todo it might be a good idea to externalize saevite_Buffer onto a library and rename saevite_BufferWrapper to saevite_Buffer, as those names make more sense.
 
-* ste_BufferWrapper
-  wraps ste_Buffer, handles cursors
-* ste_Window
-  selects a ste_Buffer
+* saevite_BufferWrapper
+  wraps saevite_Buffer, handles cursors
+* saevite_Window
+  selects a saevite_Buffer
   handles font size, which font
