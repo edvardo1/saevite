@@ -40,7 +40,7 @@ typedef struct {
 	I32 cursor;
 } saevite_Ste;
 
-void toGlyphs(String8 str, npfont_Glyph **glyphs, U32 *len) {
+Void toGlyphs(String8 str, npfont_Glyph **glyphs, U32 *len) {
 	*glyphs = malloc(sizeof(npfont_Glyph) * str.len);
 	assert(*glyphs != NULL);
 	U32 codepoint = 0;
@@ -58,7 +58,7 @@ void toGlyphs(String8 str, npfont_Glyph **glyphs, U32 *len) {
 	}
 }
 
-void saevite_openWindow(saevite_Ste *saevite) {
+Void saevite_openWindow(saevite_Ste *saevite) {
 	Allocator npfontAllocator = {malloc, free};
 	gooey_Cfg cfg = {0};
 	U32 fontIndex = 0;
@@ -102,7 +102,7 @@ Bool saevite_windowShouldClose(saevite_Ste *saevite) {
 	return gooey_windowShouldClose(saevite->gctx);
 }
 
-void saevite_update(saevite_Ste *saevite) {
+Void saevite_update(saevite_Ste *saevite) {
 	saevite_Window *window = &saevite->windows.items[0];
 	saevite_Buffer *buffer = &saevite->buffers.items[window->bufferIndex];
 	gooey_Event gev = {0};
@@ -113,14 +113,29 @@ void saevite_update(saevite_Ste *saevite) {
 	gooey_waitEvent(saevite->gctx, &gev);
 
 	if (gooey_event_key_get(saevite->gctx, &gev, &key, &keyMod, &isDown) == 0 && isDown) {
-		printf("key = %ld\n", key);
+		printf("key = %ld, keymod = %x\n", key, keyMod);
 		if (key == '\r') {key = '\n';}
-		if (key == 8) {
+
+		if (!!(keyMod & gooey_KEYMOD_LCTRL) && key == 'z') {
+			saevite_undoSingle(buffer, &saevite->cursor);
+			saevite->drawingNecessary = true;
+
+			saevite_printBuffer(buffer);
+			printf("cursor: %d\n", saevite->cursor);
+		} else if (!!(keyMod & gooey_KEYMOD_LCTRL) && key == 'y') {
+			saevite_redoSingle(buffer, NULL);
+			saevite->drawingNecessary = true;
+
+			saevite_printBuffer(buffer);
+			printf("cursor: %d\n", saevite->cursor);
+		} else if (key == 8) {
 			saevite_deleteChar(buffer, saevite->cursor - 1);
 			saevite->cursor -= 1;
 			if (saevite->cursor < 0) {saevite->cursor = 0;}
 			saevite->drawingNecessary = true;
+
 			saevite_printBuffer(buffer);
+			printf("cursor: %d\n", saevite->cursor);
 		//} else if (key == 'q') {
 		//	gooey_setWindowShouldClose(saevite->gctx, true);
 		} else if (key == SDLK_LEFT) {
@@ -133,15 +148,24 @@ void saevite_update(saevite_Ste *saevite) {
 			saevite->cursor += 1;
 			saevite->drawingNecessary = true;
 		} else if (key == '\n' || key == ' ' || key == '\t' || (key >= '!' && key <= '~')) {
+			if (key == '\n') {
+				buffer->doMergeInsertedChars = false;
+				buffer->mode = saevite_BufferMode_None;
+			} else {
+				buffer->doMergeInsertedChars = true;
+			}
 			saevite_insertChar(buffer, saevite->cursor, key);
+
 			saevite->cursor += 1;
 			saevite->drawingNecessary = true;
+
 			saevite_printBuffer(buffer);
+			printf("cursor: %d\n", saevite->cursor);
 		}
 	}
 }
 
-void drawCursor(saevite_Ste *saevite, I32 xPos, I32 yPos, I32 ascent, I32 descent) {
+Void drawCursor(saevite_Ste *saevite, I32 xPos, I32 yPos, I32 ascent, I32 descent) {
 	Rect_I32 cursorRect = rect_I32(
 		xPos,
 		yPos - ascent,
@@ -153,7 +177,7 @@ void drawCursor(saevite_Ste *saevite, I32 xPos, I32 yPos, I32 ascent, I32 descen
 	gooey_fillRect(saevite->gctx, cursorRect);
 }
 
-void saevite_renderBuffer(saevite_Ste *saevite, saevite_Buffer *buffer) {
+Void saevite_renderBuffer(saevite_Ste *saevite, saevite_Buffer *buffer) {
 	I32 xPos = 100, yPos = 100, yDiff = 0;
 	npfont_GlyphInfo gi = {0};
 	npunicode_Utf8Decoder decoder = {0};
@@ -237,9 +261,12 @@ void saevite_renderBuffer(saevite_Ste *saevite, saevite_Buffer *buffer) {
 			drawCursor(saevite, xPos, yPos, defaultAscent, defaultDescent);
 		}
 	}
+	if (buffer->currentPieces.len == 0) {
+		drawCursor(saevite, xPos, yPos, defaultAscent, defaultDescent);
+	}
 }
 
-void saevite_render(saevite_Ste *saevite) {
+Void saevite_render(saevite_Ste *saevite) {
 	U64 b = gooey_getNs(saevite->gctx);
 	saevite_Window *window = &saevite->windows.items[0];
 	saevite_Buffer *buffer = &saevite->buffers.items[window->bufferIndex];
@@ -262,14 +289,16 @@ void saevite_render(saevite_Ste *saevite) {
 	);
 
 	U64 e = gooey_getNs(saevite->gctx);
-	printf("%fms\n", (e - b) / 1000000.0);
+	UNUSED(b);
+	UNUSED(e);
+	//printf("%ldus\n", (e - b) / 1000);
 }
 
-void saevite_closeWindow(saevite_Ste *saevite) {
+Void saevite_closeWindow(saevite_Ste *saevite) {
 	gooey_exit(saevite->gctx);
 }
 
-void finishTest(String8 test_name, saevite_Buffer *buffer, String8 expectedResult) {
+Void finishTest(String8 test_name, saevite_Buffer *buffer, String8 expectedResult) {
 	String8 result = {0};
 	saevite_stringFromBuffer(buffer, &result);
 	if (strEq(result, expectedResult)) {
@@ -281,10 +310,9 @@ void finishTest(String8 test_name, saevite_Buffer *buffer, String8 expectedResul
 	}
 }
 
-void test_1() {
+Void test_1(Void) {
 	saevite_Buffer buffer = {0};
 	Uint indices[64];
-	Uint i = 0;
 
 	saevite_pieceNew(&buffer, S("foo bar baz"), &indices[0]);
 	saevite_pieceNew(&buffer, S("Hello bro"),   &indices[1]);
@@ -307,7 +335,7 @@ void test_1() {
 	finishTest(S("1"), &buffer, S("miLry amgoHello brofooHEREbar baz"));
 }
 
-void test_2() {
+Void test_2(Void) {
 	saevite_Buffer buffer = {0};
 	String8 result = {0};
 
@@ -320,7 +348,7 @@ void test_2() {
 	finishTest(S("2"), &buffer, S("eo"));
 }
 
-void test_3() {
+Void test_3(Void) {
 	saevite_Buffer buffer = {0};
 	String8 result = {0};
 
@@ -337,7 +365,7 @@ void test_3() {
 	finishTest(S("3"), &buffer, S(""));
 }
 
-void test_4() {
+Void test_4(Void) {
 	saevite_Buffer buffer = {0};
 	String8 result = {0};
 
@@ -356,7 +384,7 @@ void test_4() {
 	finishTest(S("4"), &buffer, S("abcdEF"));
 }
 
-int main() {
+Int main(Void) {
 	gooey_Ctx gctx = {0};
 	saevite_Ste saevite = {0};
 	saevite.gctx = &gctx;

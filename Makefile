@@ -1,18 +1,28 @@
-CC? = cc
-CFLAGS = \
-	-Wall -Wextra -Wno-unused -Werror \
+CC?=cc
+LD=gcc
+WFLAGS=-Wall -Wextra -Wshadow -Wvla -Wstrict-prototypes -Werror -std=c11 -pedantic
+CFLAGS= \
 	-I./include \
-	-ggdb \
-	-std=c11 -pedantic \
-	$(EXTRA_CFLAGS)
-SDLCFLAGS = $(shell pkg-config --cflags sdl3)
-SDLLIBS = $(shell pkg-config --libs sdl3)
+	$(WFLAGS) \
+	$(shell pkg-config --cflags sdl3) \
+	$(EXTRACFLAGS)
 
-bin/saevite: src/saevite.c src/saevite_text.c src/*.c include/acyacsl.h bin
-	$(CC) $(CFLAGS) $(SDL_CFLAGS) -o $@ src/*.c $(SDLLIBS) -lm
+LIBS=$(shell pkg-config --libs sdl3) -lm
 
-obj/stb_truetype.o: src/stb_truetype.c include/stb_truetype.h
-	$(CC) $(CFLAGS) -c -o $@ $< -lm
+bin/saevite: obj/saevite.o obj/saevite_text.o obj/stb_truetype.o obj/acyacsl.o
+	$(LD) $(CFLAGS) -o $@ $^ $(LIBS)
+
+obj/saevite.o: src/saevite.c include/acyacsl.h include/gooey.h include/npfont.h include/npunicode.h obj
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+obj/saevite_text.o: src/saevite_text.c include/npunicode.h obj
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+obj/acyacsl.o: src/acyacsl.c include/acyacsl.h obj
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+obj/stb_truetype.o: src/stb_truetype.c include/stb_truetype.h obj
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 bin:
 	mkdir -p bin

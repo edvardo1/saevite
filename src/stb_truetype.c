@@ -23,6 +23,7 @@ void *mymalloc(size_t size) {
 
 	if (memory == NULL) {
 		assert(0 && "wtf");
+		return NULL;
 	} else {
 		allocation = (Allocation *)memory;
 		ptr        = memory + sizeof(Allocation);

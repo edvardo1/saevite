@@ -23,11 +23,13 @@ struct saevite_Buffer {
 	DynamicArray(String8) allPieces;
 	DynamicArray(Uint) currentPieces;
 	DynamicArray(saevite_Action) actions;
-	Uint lastAction; /* @todo unused for now */
+	Uint lastActionIndex;
 
 	saevite_BufferMode mode;
+
 	Uint lastPosition;
 	Uint lastCharAllPiecesIndex;
+	Bool doMergeInsertedChars;
 };
 
 Void saevite_printBuffer(saevite_Buffer *buffer);
@@ -35,6 +37,10 @@ Void saevite_stringFromBuffer(saevite_Buffer *buffer, String8 *string);
 Void saevite_printBufferContents(saevite_Buffer *buffer);
 Int saevite__buffer_getPieceInfoFromPosition(saevite_Buffer *buffer, Uint position, Uint *pieceIndex, Uint *len);
 Void saevite_pieceNew(saevite_Buffer *buffer, String8 str, Uint *index);
+Void saevite_undoSingle(saevite_Buffer *buffer, Int *cursorPosition);
+Void saevite_redoSingle(saevite_Buffer *buffer, Int *cursorPosition);
+Void saevite_undo(saevite_Buffer *buffer, Int *cursorPosition);
+Void saevite_redo(saevite_Buffer *buffer, Int *cursorPosition);
 Void saevite_pieceInsert(saevite_Buffer *buffer, Uint currentPiecesPosition, Uint allPiecesIndex);
 Void saevite_newPieceInsert(saevite_Buffer *buffer, Uint currentPiecesPosition, String8 string);
 Void saevite__buffer_pieceGetString(saevite_Buffer *buffer, Uint currentPiecesPosition, String8 *str);
