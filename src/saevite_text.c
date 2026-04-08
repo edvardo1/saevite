@@ -50,9 +50,9 @@ Void saevite_printBuffer(saevite_Buffer *buffer) {
 		saevite_Action *a = &buffer->actions.items[i];
 		Uint full = 0xffffffff;
 
-		if (i < buffer->actionsTop - 1) {
+		if (i + 1 < buffer->actionsTop) {
 			printf(" o");
-		} else if (buffer->actionsTop - 1 == i) {
+		} else if (buffer->actionsTop == i + 1) {
 			printf(">>");
 		} else {
 			printf("  ");
@@ -212,6 +212,31 @@ void saevite__actionReverse(saevite_Action *dst, const saevite_Action *src) {
 	}
 }
 
+Void saevite__actionCursor(const saevite_Buffer *buffer, const saevite_Action *action, Int *cursorPosition) {
+	const Uint full = 0xffffffff;
+	Uint cpIndex = 0;
+	Uint pieceIndex = 0;
+	Uint len = 0;
+	Uint cpMaxIndex = 0;
+
+	if (action->currentPiecesIndex == full) {
+		return;
+	}
+
+	if (action->allPiecesAfterIndex == full) {
+		cpMaxIndex = action->currentPiecesIndex;
+	} else {
+		cpMaxIndex = action->currentPiecesIndex + 1;
+	}
+
+	*cursorPosition = 0;
+	for (cpIndex = 0; cpIndex < cpMaxIndex; cpIndex += 1) {
+		pieceIndex = buffer->currentPieces.items[cpIndex];
+		len = buffer->allPieces.items[pieceIndex].len;
+		*cursorPosition += len;
+	}
+}
+
 Void saevite_undoSingle(saevite_Buffer *buffer, Int *cursorPosition) {
 	const saevite_Action *action = NULL;
 	saevite_Action reversedAction = {0};
@@ -224,14 +249,24 @@ Void saevite_undoSingle(saevite_Buffer *buffer, Int *cursorPosition) {
 		saevite__doAction(buffer, &reversedAction);
 
 		if (cursorPosition != NULL) {
-			*cursorPosition = 0;
+			saevite__actionCursor(buffer, &reversedAction, cursorPosition);
 		}
 	}
 }
 
 Void saevite_redoSingle(saevite_Buffer *buffer, Int *cursorPosition) {
-	UNUSED(buffer);
-	UNUSED(cursorPosition);
+	saevite_Action *action = NULL;
+
+	if (buffer->actionsTop < buffer->actions.len) {
+		action = &buffer->actions.items[buffer->actionsTop];
+		buffer->actionsTop += 1;
+
+		saevite__doAction(buffer, action);
+
+		if (cursorPosition != NULL) {
+			saevite__actionCursor(buffer, action, cursorPosition);
+		}
+	}
 }
 
 Void saevite_undo(saevite_Buffer *buffer, Int *cursorPosition) {

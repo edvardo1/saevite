@@ -123,7 +123,7 @@ Void saevite_update(saevite_Ste *saevite) {
 			saevite_printBuffer(buffer);
 			printf("cursor: %d\n", saevite->cursor);
 		} else if (!!(keyMod & gooey_KEYMOD_LCTRL) && key == 'y') {
-			saevite_redoSingle(buffer, NULL);
+			saevite_redoSingle(buffer, &saevite->cursor);
 			saevite->drawingNecessary = true;
 
 			saevite_printBuffer(buffer);
