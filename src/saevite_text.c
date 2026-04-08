@@ -70,6 +70,12 @@ Void saevite_printBuffer(saevite_Buffer *buffer) {
 			printf("[%ld] = remove: ", i);
 			printPieceString(buffer->allPieces.items[a->allPiecesBeforeIndex]);
 			printf(" in %d\n", a->currentPiecesIndex);
+		} else if (a->allPiecesBeforeIndex != full && a->allPiecesAfterIndex != full) {
+			printf("[%ld] = replace: ", i);
+			printPieceString(buffer->allPieces.items[a->allPiecesBeforeIndex]);
+			printf(" to ");
+			printPieceString(buffer->allPieces.items[a->allPiecesAfterIndex]);
+			printf(" in %d\n", a->currentPiecesIndex);
 		} else {
 			assert(0);
 		}
@@ -351,27 +357,24 @@ Void saevite__buffer_newPieceReplace(saevite_Buffer *buffer, Uint currentPiecesP
 Void saevite_insertString(saevite_Buffer *buffer, Uint position, String8 str) {
 	String8 oldStr = {0};
 	Uint pieceIndex = 0, len = 0;
-	Uint allPiecesIndex = 0;
 
 	buffer->mode = saevite_BufferMode_None;
 
 	saevite__buffer_getPieceInfoFromPosition(buffer, position, &pieceIndex, &len);
-	allPiecesIndex = buffer->currentPieces.items[pieceIndex];
 	saevite__buffer_pieceGetString(buffer, pieceIndex, &oldStr);
 
-	saevite__buffer_pieceRemove(buffer, pieceIndex);
-	if (len == 0) {
-		saevite_pieceInsert(buffer, pieceIndex, allPiecesIndex);
-	} else if (oldStr.len - len > 0) {
-		saevite_newPieceInsert(buffer, pieceIndex, strSlice(oldStr, len, oldStr.len - len));
-	}
-
-	saevite_newPieceInsert(buffer, pieceIndex, str);
-
-	if (len == oldStr.len) {
-		saevite_pieceInsert(buffer, pieceIndex, allPiecesIndex);
-	} else if (len > 0) {
+	if (oldStr.len - len > 0 && len > 0) {
+		saevite__buffer_newPieceReplace(buffer, pieceIndex, strSlice(oldStr, len, oldStr.len - len));
+		saevite_newPieceInsert(buffer, pieceIndex, str);
 		saevite_newPieceInsert(buffer, pieceIndex, strSlice(oldStr, 0, len));
+	} else if (oldStr.len - len > 0) {
+		saevite__buffer_newPieceReplace(buffer, pieceIndex, strSlice(oldStr, len, oldStr.len - len));
+		saevite_newPieceInsert(buffer, pieceIndex, str);
+	} else if (len > 0) {
+		saevite__buffer_newPieceReplace(buffer, pieceIndex, str);
+		saevite_newPieceInsert(buffer, pieceIndex, strSlice(oldStr, 0, len));
+	} else {
+		saevite__buffer_newPieceReplace(buffer, pieceIndex, str);
 	}
 }
 
@@ -426,11 +429,12 @@ Void saevite_insertChar(saevite_Buffer *buffer, Uint position, Char c) {
 			allPiecesIndex = buffer->currentPieces.items[pieceIndex];
 			saevite__buffer_pieceGetString(buffer, pieceIndex, &oldStr);
 
-			saevite__buffer_pieceRemove(buffer, pieceIndex);
-			if (len == 0) {
-				saevite_pieceInsert(buffer, pieceIndex, allPiecesIndex);
-			} else if (oldStr.len - len > 0) {
-				saevite_newPieceInsert(buffer, pieceIndex, strSlice(oldStr, len, oldStr.len - len));
+			if (oldStr.len - len > 0) {
+				if (len > 0) { /* in order to not replace a piece with itself */
+					saevite__buffer_newPieceReplace(buffer, pieceIndex, strSlice(oldStr, len, oldStr.len - len));
+				}
+			} else {
+				saevite__buffer_pieceRemove(buffer, pieceIndex);
 			}
 
 			saevite_pieceInsert(buffer, pieceIndex, cpIndex);
