@@ -23,7 +23,7 @@ struct saevite_Buffer {
 	DynamicArray(String8) allPieces;
 	DynamicArray(Uint) currentPieces;
 	DynamicArray(saevite_Action) actions;
-	Uint lastActionIndex;
+	Uint actionsTop;
 
 	saevite_BufferMode mode;
 
@@ -41,16 +41,16 @@ Void saevite_undoSingle(saevite_Buffer *buffer, Int *cursorPosition);
 Void saevite_redoSingle(saevite_Buffer *buffer, Int *cursorPosition);
 Void saevite_undo(saevite_Buffer *buffer, Int *cursorPosition);
 Void saevite_redo(saevite_Buffer *buffer, Int *cursorPosition);
-Void saevite_pieceInsert(saevite_Buffer *buffer, Uint currentPiecesPosition, Uint allPiecesIndex);
-Void saevite_newPieceInsert(saevite_Buffer *buffer, Uint currentPiecesPosition, String8 string);
 Void saevite__buffer_pieceGetString(saevite_Buffer *buffer, Uint currentPiecesPosition, String8 *str);
+Void saevite_pieceInsert(saevite_Buffer *buffer, Uint currentPiecesPosition, Uint allPiecesIndex);
 Void saevite__buffer_pieceReplace(
 	saevite_Buffer *buffer,
 	Uint currentPiecesPosition,
 	Uint allPiecesIndex
 );
-Void saevite__buffer_newPieceReplace(saevite_Buffer *buffer, Uint currentPiecesPosition, String8 string);
 Void saevite__buffer_pieceRemove(saevite_Buffer *buffer, Uint currentPiecesPosition);
+Void saevite_newPieceInsert(saevite_Buffer *buffer, Uint currentPiecesPosition, String8 string);
+Void saevite__buffer_newPieceReplace(saevite_Buffer *buffer, Uint currentPiecesPosition, String8 string);
 Void saevite_insertString(saevite_Buffer *buffer, Uint position, String8 str);
 Void saevite_insertChar(saevite_Buffer *buffer, Uint position, Char c);
 Void saevite_deleteSelection(saevite_Buffer *buffer, Uint position, Uint len);

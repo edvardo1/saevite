@@ -45,14 +45,14 @@ Void saevite_printBuffer(saevite_Buffer *buffer) {
 		printf("\n");
 	}
 	printf("actions:\n");
-	printf("  lastaction: %u\n", buffer->lastActionIndex);
+	printf("  actionsTop: %u\n", buffer->actionsTop);
 	for (i = 0; i < buffer->actions.len; i++) {
 		saevite_Action *a = &buffer->actions.items[i];
 		Uint full = 0xffffffff;
 
-		if (i  < buffer->lastActionIndex) {
+		if (i < buffer->actionsTop - 1) {
 			printf(" o");
-		} else if (buffer->lastActionIndex == i) {
+		} else if (buffer->actionsTop - 1 == i) {
 			printf(">>");
 		} else {
 			printf("  ");
@@ -151,88 +151,81 @@ Void saevite_pieceNew(saevite_Buffer *buffer, String8 str, Uint *index) {
 	}
 }
 
-Void saevite_undoSingle(saevite_Buffer *buffer, Int *cursorPosition) {
-	saevite_Action *action = &buffer->actions.items[buffer->lastActionIndex];
+void saevite__doAction(saevite_Buffer *buffer, const saevite_Action *action) {
 	const Uint full = 0xffffffff;
 
-	buffer->lastActionIndex -= 1;
-	printf("Undoing\n");
-
 	if (action->currentPiecesIndex != full) {
-			if (action->allPiecesBeforeIndex != full && action->allPiecesAfterIndex != full) {
-				printf("undo replace\n");
-				/* replace */
-				assert(
-					buffer->currentPieces.items[action->currentPiecesIndex] ==
-					action->allPiecesAfterIndex
-				);
-				buffer->currentPieces.items[action->currentPiecesIndex] =
-					action->allPiecesBeforeIndex;
-				printf(
-					"%d = %d\n",
-					action->currentPiecesIndex,
-					action->allPiecesBeforeIndex
-				);
-
-				if (cursorPosition != NULL) {
-					*cursorPosition = 0;
-					for (Usize i = 0; i < action->currentPiecesIndex; i++) {
-						*cursorPosition += buffer->allPieces.items[
-							buffer->currentPieces.items[i]
-						].len;
-					}
-				}
-			} else if (action->allPiecesBeforeIndex != full && action->allPiecesAfterIndex == full) {
-				printf("undo insertion\n");
-				/* insertion */
-				memmove(
-					&buffer->currentPieces.items[action->currentPiecesIndex],
-					&buffer->currentPieces.items[action->currentPiecesIndex + 1],
-					buffer->currentPieces.len - action->currentPiecesIndex
-				);
-				printf(
-					"memmove(%d, %d, %ld)\n",
-					action->currentPiecesIndex,
-					action->currentPiecesIndex + 1,
-					buffer->currentPieces.len - action->currentPiecesIndex
-				);
-				buffer->currentPieces.len += 1;
-
-				if (cursorPosition != NULL) {
-					*cursorPosition = 0;
-					for (Usize i = 0; i < action->currentPiecesIndex; i++) {
-						*cursorPosition += buffer->allPieces.items[
-							buffer->currentPieces.items[i]
-						].len;
-					}
-				}
-			} else if (action->allPiecesBeforeIndex == full && action->allPiecesAfterIndex != full) {
-				printf("undo removal\n");
-				/* removal */
-				memmove(
-					&buffer->currentPieces.items[action->currentPiecesIndex + 1],
-					&buffer->currentPieces.items[action->currentPiecesIndex],
-					buffer->currentPieces.len - action->currentPiecesIndex
-				);
-				printf(
-					"memmove(%d, %d, %ld)\n",
-					action->currentPiecesIndex + 1,
-					action->currentPiecesIndex,
-					buffer->currentPieces.len - action->currentPiecesIndex
-				);
-				buffer->currentPieces.len -= 1;
-				buffer->currentPieces.items[action->currentPiecesIndex] =
+		if (action->allPiecesBeforeIndex != full && action->allPiecesAfterIndex != full) {
+			assert(
+				buffer->currentPieces.items[action->currentPiecesIndex] ==
+				action->allPiecesBeforeIndex
+			);
+			buffer->currentPieces.items[action->currentPiecesIndex] =
+				action->allPiecesAfterIndex;
+		} else if (action->allPiecesBeforeIndex != full) {
+			memmove(
+				&buffer->currentPieces.items[action->currentPiecesIndex],
+				&buffer->currentPieces.items[action->currentPiecesIndex + 1],
+				(buffer->currentPieces.len - 1 - action->currentPiecesIndex) *
+				sizeof(*buffer->currentPieces.items)
+			);
+			buffer->currentPieces.len -= 1;
+		} else if (action->allPiecesAfterIndex != full) {
+			/* insert a */
+			daAppendZ(&buffer->currentPieces);
+			memmove(
+				&buffer->currentPieces.items[action->currentPiecesIndex + 1],
+				&buffer->currentPieces.items[action->currentPiecesIndex],
+				(buffer->currentPieces.len - 1 - action->currentPiecesIndex) *
+				sizeof(*buffer->currentPieces.items)
+			);
+			buffer->currentPieces.items[action->currentPiecesIndex] =
 					action->allPiecesAfterIndex;
+		} else {
+			assert(0);
+		}
+	}
+}
 
-				if (cursorPosition != NULL) {
-					*cursorPosition = 0;
-					for (Usize i = 0; i < action->currentPiecesIndex; i++) {
-						*cursorPosition += buffer->allPieces.items[
-							buffer->currentPieces.items[i]
-						].len;
-					}
-				}
-			}
+void saevite__actionReverse(saevite_Action *dst, const saevite_Action *src) {
+	const Uint full = 0xffffffff;
+	saevite_Action src_copy = *src;
+
+	if (src_copy.currentPiecesIndex != full) {
+		dst->currentPiecesIndex = src_copy.currentPiecesIndex;
+
+		if (src_copy.allPiecesBeforeIndex != full && src_copy.allPiecesAfterIndex != full) {
+			/* replace a b -> replace b a */
+			dst->allPiecesAfterIndex = src_copy.allPiecesBeforeIndex;
+			dst->allPiecesBeforeIndex = src_copy.allPiecesAfterIndex;
+		} else if (src_copy.allPiecesBeforeIndex != full) {
+			/* remove a -> insert a */
+			dst->allPiecesAfterIndex = src_copy.allPiecesBeforeIndex;
+			dst->allPiecesBeforeIndex = full;
+		} else if (src_copy.allPiecesAfterIndex != full) {
+			/* insert a -> remove a */
+			dst->allPiecesAfterIndex = full;
+			dst->allPiecesBeforeIndex = src_copy.allPiecesAfterIndex;
+		} else {
+			assert(0);
+		}
+	}
+}
+
+Void saevite_undoSingle(saevite_Buffer *buffer, Int *cursorPosition) {
+	const saevite_Action *action = NULL;
+	saevite_Action reversedAction = {0};
+
+	if (buffer->actionsTop > 0) {
+		action = &buffer->actions.items[buffer->actionsTop - 1];
+		buffer->actionsTop -= 1;
+
+		saevite__actionReverse(&reversedAction, action);
+		saevite__doAction(buffer, &reversedAction);
+
+		if (cursorPosition != NULL) {
+			*cursorPosition = 0;
+		}
 	}
 }
 
@@ -243,9 +236,11 @@ Void saevite_redoSingle(saevite_Buffer *buffer, Int *cursorPosition) {
 
 Void saevite_undo(saevite_Buffer *buffer, Int *cursorPosition) {
 	assert(0);
-	while (buffer->lastActionIndex == 0) {
-		saevite_undoSingle(buffer, cursorPosition);
-	}
+	UNUSED(buffer);
+	UNUSED(cursorPosition);
+	//while (buffer->actionsTop == 0) {
+	//	saevite_undoSingle(buffer, cursorPosition);
+	//}
 }
 
 Void saevite_redo(saevite_Buffer *buffer, Int *cursorPosition) {
@@ -255,19 +250,14 @@ Void saevite_redo(saevite_Buffer *buffer, Int *cursorPosition) {
 	assert(0);
 }
 
+Void saevite__buffer_pieceGetString(saevite_Buffer *buffer, Uint currentPiecesPosition, String8 *str) {
+	*str = buffer->allPieces.items[
+		buffer->currentPieces.items[currentPiecesPosition]
+	];
+}
+
 Void saevite_pieceInsert(saevite_Buffer *buffer, Uint currentPiecesPosition, Uint allPiecesIndex) {
-	assert(allPiecesIndex < buffer->allPieces.len);
-	daAppendZ(&buffer->currentPieces);
-
-	memmove(
-		&buffer->currentPieces.items[currentPiecesPosition + 1],
-		&buffer->currentPieces.items[currentPiecesPosition],
-		(buffer->currentPieces.len - 1 - currentPiecesPosition) *
-		sizeof(*buffer->currentPieces.items)
-	);
-	buffer->currentPieces.items[currentPiecesPosition] = allPiecesIndex;
-
-	buffer->actions.len = MIN(buffer->lastActionIndex + 1, buffer->actions.len);
+	buffer->actions.len = MIN(buffer->actionsTop, buffer->actions.len);
 	daAppend(
 		&buffer->actions,
 		saevite_makeInsertAction(
@@ -275,27 +265,8 @@ Void saevite_pieceInsert(saevite_Buffer *buffer, Uint currentPiecesPosition, Uin
 			allPiecesIndex
 		)
 	);
-	printf(
-		"insertion: cp: %d, b: %d, a: %d\n",
-		buffer->actions.items[buffer->actions.len - 1].currentPiecesIndex,
-		buffer->actions.items[buffer->actions.len - 1].allPiecesBeforeIndex,
-		buffer->actions.items[buffer->actions.len - 1].allPiecesAfterIndex
-	);
-	buffer->lastActionIndex = buffer->actions.len - 1;
-	printf("lastActionIndex = %d\n", buffer->lastActionIndex);
-	printf("buffer->actions.len = %ld\n", buffer->actions.len);
-}
-
-Void saevite_newPieceInsert(saevite_Buffer *buffer, Uint currentPiecesPosition, String8 string) {
-	Uint pieceIndex = 0;
-	saevite_pieceNew(buffer, string, &pieceIndex);
-	saevite_pieceInsert(buffer, currentPiecesPosition, pieceIndex);
-}
-
-Void saevite__buffer_pieceGetString(saevite_Buffer *buffer, Uint currentPiecesPosition, String8 *str) {
-	*str = buffer->allPieces.items[
-		buffer->currentPieces.items[currentPiecesPosition]
-	];
+	saevite__doAction(buffer, &buffer->actions.items[buffer->actions.len - 1]);
+	buffer->actionsTop = buffer->actions.len;
 }
 
 Void saevite__buffer_pieceReplace(
@@ -303,7 +274,7 @@ Void saevite__buffer_pieceReplace(
 	Uint currentPiecesPosition,
 	Uint allPiecesIndex
 ) {
-	buffer->actions.len = MIN(buffer->lastActionIndex + 1, buffer->actions.len);
+	buffer->actions.len = MIN(buffer->actionsTop, buffer->actions.len);
 	daAppend(
 		&buffer->actions,
 		saevite_makeReplaceAction(
@@ -312,18 +283,12 @@ Void saevite__buffer_pieceReplace(
 			allPiecesIndex
 		)
 	);
-	buffer->lastActionIndex = buffer->actions.len - 1;
-	buffer->currentPieces.items[currentPiecesPosition] = allPiecesIndex;
-}
-
-Void saevite__buffer_newPieceReplace(saevite_Buffer *buffer, Uint currentPiecesPosition, String8 string) {
-	Uint pieceIndex = 0;
-	saevite_pieceNew(buffer, string, &pieceIndex);
-	saevite__buffer_pieceReplace(buffer, currentPiecesPosition, pieceIndex);
+	buffer->actionsTop = buffer->actions.len;
+	saevite__doAction(buffer, &buffer->actions.items[buffer->actions.len - 1]);
 }
 
 Void saevite__buffer_pieceRemove(saevite_Buffer *buffer, Uint currentPiecesPosition) {
-	buffer->actions.len = MIN(buffer->lastActionIndex + 1, buffer->actions.len);
+	buffer->actions.len = MIN(buffer->actionsTop, buffer->actions.len);
 	daAppend(
 		&buffer->actions,
 		saevite_makeRemoveAction(
@@ -331,15 +296,21 @@ Void saevite__buffer_pieceRemove(saevite_Buffer *buffer, Uint currentPiecesPosit
 			buffer->currentPieces.items[currentPiecesPosition]
 		)
 	);
-	buffer->lastActionIndex = buffer->actions.len - 1;
+	buffer->actionsTop = buffer->actions.len;
 
-	memmove(
-		&buffer->currentPieces.items[currentPiecesPosition],
-		&buffer->currentPieces.items[currentPiecesPosition + 1],
-		(buffer->currentPieces.len - 1 - currentPiecesPosition) *
-		sizeof(*buffer->currentPieces.items)
-	);
-	buffer->currentPieces.len -= 1;
+	saevite__doAction(buffer, &buffer->actions.items[buffer->actions.len - 1]);
+}
+
+Void saevite_newPieceInsert(saevite_Buffer *buffer, Uint currentPiecesPosition, String8 string) {
+	Uint pieceIndex = 0;
+	saevite_pieceNew(buffer, string, &pieceIndex);
+	saevite_pieceInsert(buffer, currentPiecesPosition, pieceIndex);
+}
+
+Void saevite__buffer_newPieceReplace(saevite_Buffer *buffer, Uint currentPiecesPosition, String8 string) {
+	Uint pieceIndex = 0;
+	saevite_pieceNew(buffer, string, &pieceIndex);
+	saevite__buffer_pieceReplace(buffer, currentPiecesPosition, pieceIndex);
 }
 
 Void saevite_insertString(saevite_Buffer *buffer, Uint position, String8 str) {

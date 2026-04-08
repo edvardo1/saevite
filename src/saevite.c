@@ -84,7 +84,7 @@ Void saevite_openWindow(saevite_Ste *saevite) {
 	glyphs = NULL;
 	toGlyphs(
 		S(
-			"§ abcdefghijklmnopqrstuvwxyz"
+			"§«» abcdefghijklmnopqrstuvwxyz"
 			"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 			"1234567890"
 			"!@#$%^&*()`~;:"
@@ -384,6 +384,29 @@ Void test_4(Void) {
 	finishTest(S("4"), &buffer, S("abcdEF"));
 }
 
+Void test_5(Void) {
+	saevite_Buffer buffer = {0};
+	String8 result = {0};
+
+	buffer.doMergeInsertedChars = true;
+	saevite_insertChar(&buffer, 0, 'a');
+	saevite_insertChar(&buffer, 1, 'b');
+	saevite_insertChar(&buffer, 2, 'c');
+
+	buffer.doMergeInsertedChars = false;
+	saevite_insertChar(&buffer, 3, '\n');
+
+	buffer.doMergeInsertedChars = true;
+	saevite_insertChar(&buffer, 4, 'd');
+	saevite_insertChar(&buffer, 5, 'e');
+	saevite_insertChar(&buffer, 6, 'f');
+
+	saevite_undoSingle(&buffer, NULL);
+
+	saevite_stringFromBuffer(&buffer, &result);
+	finishTest(S("5"), &buffer, S("abc\n"));
+}
+
 Int main(Void) {
 	gooey_Ctx gctx = {0};
 	saevite_Ste saevite = {0};
@@ -394,6 +417,7 @@ Int main(Void) {
 	test_2();
 	test_3();
 	test_4();
+	test_5();
 
 	//saevite_insertChar(&saevite.buffer, 0, 'e');
 	//saevite_insertChar(&saevite.buffer, 1, 'd');
