@@ -1,6 +1,6 @@
 CC?=cc
 LD=gcc
-WFLAGS=-Wall -Wextra -Wshadow -Wvla -Wstrict-prototypes -Werror -std=c11 -pedantic
+WFLAGS=-Wall -Wextra -Wpedantic -Wshadow -Wstrict-prototypes -Wvla -Werror -std=c11 -pedantic
 CFLAGS= \
 	-I./include \
 	$(WFLAGS) \
