@@ -319,15 +319,10 @@ Void finishTest(String8 test_name, saevite_Buffer *buffer, String8 expectedResul
 
 Void test_1(Void) {
 	saevite_Buffer buffer = {0};
-	Uint indices[64];
 
-	saevite_pieceNew(&buffer, S("foo bar baz"), &indices[0]);
-	saevite_pieceNew(&buffer, S("Hello bro"),   &indices[1]);
-	saevite_pieceNew(&buffer, S("mi amigo"),   &indices[2]);
-
-	saevite__buffer_pieceInsert(&buffer, 0, indices[0]);
-	saevite__buffer_pieceInsert(&buffer, 0, indices[1]);
-	saevite__buffer_pieceInsert(&buffer, 0, indices[2]);
+	saevite_insertString(&buffer, 0, S("foo bar baz"));
+	saevite_insertString(&buffer, 1, S("Hello bro"));
+	saevite_insertString(&buffer, 2, S("mi amigo"));
 
 	saevite_insertChar(&buffer, 2, 'L');
 	saevite_insertChar(&buffer, 3, 'o');
@@ -346,6 +341,8 @@ Void test_2(Void) {
 	saevite_Buffer buffer = {0};
 	String8 result = {0};
 
+	saevite_buffer_init(&buffer);
+
 	saevite_insertChar(&buffer, 0, 'e');
 	saevite_insertChar(&buffer, 1, 'd');
 	saevite_insertChar(&buffer, 2, 'o');
@@ -358,6 +355,8 @@ Void test_2(Void) {
 Void test_3(Void) {
 	saevite_Buffer buffer = {0};
 	String8 result = {0};
+
+	saevite_buffer_init(&buffer);
 
 	saevite_insertChar(&buffer, 0, 'e');
 	saevite_insertChar(&buffer, 1, 'd');
@@ -375,6 +374,8 @@ Void test_3(Void) {
 Void test_4(Void) {
 	saevite_Buffer buffer = {0};
 	String8 result = {0};
+
+	saevite_buffer_init(&buffer);
 
 	saevite_insertChar(&buffer, 0, 'a');
 	saevite_insertChar(&buffer, 1, 'b');
@@ -394,6 +395,8 @@ Void test_4(Void) {
 Void test_5(Void) {
 	saevite_Buffer buffer = {0};
 	String8 result = {0};
+
+	saevite_buffer_init(&buffer);
 
 	buffer.doMergeInsertedChars = true;
 	saevite_insertChar(&buffer, 0, 'a');

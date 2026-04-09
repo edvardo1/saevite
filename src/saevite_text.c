@@ -8,10 +8,27 @@
 
 const Uint full = 0xffffffff;
 
+Void printPieceString(String8 string);
+Int saevite__buffer_getPieceInfoFromPosition(const saevite_Buffer *buffer, Uint position, Uint *pieceIndex, Uint *len);
+Void saevite__doAction(saevite_Buffer *buffer, const saevite_Action *action);
+Void saevite__actionReverse(saevite_Action *dst, const saevite_Action *src);
+Void saevite__actionCursor(const saevite_Buffer *buffer, const saevite_Action *action, Int *cursorPosition);
+Void saevite__buffer_pieceGetString(const saevite_Buffer *buffer, Uint currentPiecesPosition, String8 *str);
+Void saevite__buffer_pieceInsert(saevite_Buffer *buffer, Uint currentPiecesPosition, Uint allPiecesIndex);
+Void saevite__buffer_pieceReplace(
+	saevite_Buffer *buffer,
+	Uint currentPiecesPosition,
+	Uint allPiecesIndex
+);
+Void saevite__buffer_pieceRemove(saevite_Buffer *buffer, Uint currentPiecesPosition);
+Void saevite__buffer_newPieceInsert(saevite_Buffer *buffer, Uint currentPiecesPosition, String8 string);
+Void saevite__buffer_newPieceReplace(saevite_Buffer *buffer, Uint currentPiecesPosition, String8 string);
+
 Void saevite_buffer_init(saevite_Buffer *buffer) {
 	daAppendZ(&buffer->cursors);
 	buffer->cursors.items[buffer->cursors.len - 1].position = 0;
 	buffer->cursors.items[buffer->cursors.len - 1].clipboardRegisterIndex = 0;
+	buffer->name = S("*scratch*");
 }
 
 Void printPieceString(String8 string) {
@@ -364,20 +381,25 @@ Void saevite_insertString(saevite_Buffer *buffer, Uint position, String8 str) {
 	buffer->mode = saevite_BufferMode_None;
 
 	saevite__buffer_getPieceInfoFromPosition(buffer, position, &pieceIndex, &len);
-	saevite__buffer_pieceGetString(buffer, pieceIndex, &oldStr);
 
-	if (oldStr.len - len > 0 && len > 0) {
-		saevite__buffer_newPieceReplace(buffer, pieceIndex, strSlice(oldStr, len, oldStr.len - len));
-		saevite__buffer_newPieceInsert(buffer, pieceIndex, str);
-		saevite__buffer_newPieceInsert(buffer, pieceIndex, strSlice(oldStr, 0, len));
-	} else if (oldStr.len - len > 0) {
-		saevite__buffer_newPieceReplace(buffer, pieceIndex, strSlice(oldStr, len, oldStr.len - len));
-		saevite__buffer_newPieceInsert(buffer, pieceIndex, str);
-	} else if (len > 0) {
-		saevite__buffer_newPieceReplace(buffer, pieceIndex, str);
-		saevite__buffer_newPieceInsert(buffer, pieceIndex, strSlice(oldStr, 0, len));
+	if (pieceIndex < buffer->currentPieces.len) {
+		saevite__buffer_pieceGetString(buffer, pieceIndex, &oldStr);
+
+		if (oldStr.len - len > 0 && len > 0) {
+			saevite__buffer_newPieceReplace(buffer, pieceIndex, strSlice(oldStr, len, oldStr.len - len));
+			saevite__buffer_newPieceInsert(buffer, pieceIndex, str);
+			saevite__buffer_newPieceInsert(buffer, pieceIndex, strSlice(oldStr, 0, len));
+		} else if (oldStr.len - len > 0) {
+			saevite__buffer_newPieceReplace(buffer, pieceIndex, strSlice(oldStr, len, oldStr.len - len));
+			saevite__buffer_newPieceInsert(buffer, pieceIndex, str);
+		} else if (len > 0) {
+			saevite__buffer_newPieceReplace(buffer, pieceIndex, str);
+			saevite__buffer_newPieceInsert(buffer, pieceIndex, strSlice(oldStr, 0, len));
+		} else {
+			saevite__buffer_newPieceReplace(buffer, pieceIndex, str);
+		}
 	} else {
-		saevite__buffer_newPieceReplace(buffer, pieceIndex, str);
+		saevite__buffer_newPieceInsert(buffer, pieceIndex, str);
 	}
 }
 

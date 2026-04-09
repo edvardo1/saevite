@@ -37,10 +37,11 @@ struct saevite_Buffer {
 	Uint lastPosition;
 	Uint lastCharAllPiecesIndex;
 	Bool doMergeInsertedChars;
+
+	String8 name;
 };
 
 Void saevite_buffer_init(saevite_Buffer *buffer);
-Void printPieceString(String8 string);
 Void saevite_printBuffer(const saevite_Buffer *buffer);
 Void saevite_printBufferContents(const saevite_Buffer *buffer);
 Void saevite_stringFromBuffer(const saevite_Buffer *buffer, String8 *string);
@@ -49,29 +50,16 @@ Int saevite_buffer_getCursorAmount(const saevite_Buffer *buffer);
 Void saevite_buffer_getCursorPosition(const saevite_Buffer *buffer, Uint index, Uint *position);
 Void saevite_buffer_setCursorPosition(saevite_Buffer *buffer, Uint index, Uint position);
 
-Int saevite__buffer_getPieceInfoFromPosition(const saevite_Buffer *buffer, Uint position, Uint *pieceIndex, Uint *len);
 Void saevite_pieceNew(saevite_Buffer *buffer, String8 str, Uint *index);
-Void saevite__doAction(saevite_Buffer *buffer, const saevite_Action *action);
-Void saevite__actionReverse(saevite_Action *dst, const saevite_Action *src);
-Void saevite__actionCursor(const saevite_Buffer *buffer, const saevite_Action *action, Int *cursorPosition);
 Void saevite_undoSingle(saevite_Buffer *buffer, Int *cursorPosition);
 Void saevite_redoSingle(saevite_Buffer *buffer, Int *cursorPosition);
 Void saevite_undo(saevite_Buffer *buffer, Int *cursorPosition);
 Void saevite_redo(saevite_Buffer *buffer, Int *cursorPosition);
-Void saevite__buffer_pieceGetString(const saevite_Buffer *buffer, Uint currentPiecesPosition, String8 *str);
-Void saevite__buffer_pieceInsert(saevite_Buffer *buffer, Uint currentPiecesPosition, Uint allPiecesIndex);
-Void saevite__buffer_pieceReplace(
-	saevite_Buffer *buffer,
-	Uint currentPiecesPosition,
-	Uint allPiecesIndex
-);
-Void saevite__buffer_pieceRemove(saevite_Buffer *buffer, Uint currentPiecesPosition);
-Void saevite__buffer_newPieceInsert(saevite_Buffer *buffer, Uint currentPiecesPosition, String8 string);
-Void saevite__buffer_newPieceReplace(saevite_Buffer *buffer, Uint currentPiecesPosition, String8 string);
 Void saevite_insertString(saevite_Buffer *buffer, Uint position, String8 str);
 Void saevite_insertChar(saevite_Buffer *buffer, Uint position, Char c);
 Void saevite_deleteSelection(saevite_Buffer *buffer, Uint position, Uint len);
 Int saevite_deleteChar(saevite_Buffer *buffer, Uint position);
+
 saevite_Action saevite__action(Uint currentPiecesIndex, Uint allPiecesBeforeIndex, Uint allPiecesAfterIndex);
 saevite_Action saevite_makeUndoAction(Void);
 saevite_Action saevite_makeReplaceAction(Uint currentPiecesIndex, Uint allPiecesBeforeIndex, Uint allPiecesAfterIndex);
