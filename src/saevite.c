@@ -318,9 +318,9 @@ Void test_1(Void) {
 	saevite_pieceNew(&buffer, S("Hello bro"),   &indices[1]);
 	saevite_pieceNew(&buffer, S("mi amigo"),   &indices[2]);
 
-	saevite_pieceInsert(&buffer, 0, indices[0]);
-	saevite_pieceInsert(&buffer, 0, indices[1]);
-	saevite_pieceInsert(&buffer, 0, indices[2]);
+	saevite__buffer_pieceInsert(&buffer, 0, indices[0]);
+	saevite__buffer_pieceInsert(&buffer, 0, indices[1]);
+	saevite__buffer_pieceInsert(&buffer, 0, indices[2]);
 
 	saevite_insertChar(&buffer, 2, 'L');
 	saevite_insertChar(&buffer, 3, 'o');

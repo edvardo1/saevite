@@ -1,0 +1,49 @@
+use descriptive variable names.
+don't overcomment.
+
+every function should follow this naming convention:
+  module1_module2_functionName
+
+every struct should follow this naming convention:
+  module1_module2_StructName
+
+unlike other styles, macros can represent what they are trying to mimic, for example, the DynamicArray macro is meant to mimic a struct that takes an argument, so it is named like a struct, daAppend is meant to mimic a function so it is named like a function.
+macro constants like the following should still use SCREAM_CASE
+#define MODULE1_MODULE2_SOME_MAGIC_NUMBER 1234
+
+use two underscores instead of one if something is meant to not be part of
+the public api, example:
+  module__superSecretFunction
+
+the opening curly bracket for a block statement should be on the same line as the close parenthesis.
+the opening AND closing curly bracket should be on the same line as else
+use newlines inside expressions, argument lists or for loops if the lines become too large.
+example:
+Int example_thisIsAReallyLongAndDescriptiveFunctionName(
+	Int argumentOne,
+	Int argumentTwo,
+	const example_InterestingDataStructure *argumentThree,
+) {
+	Uint argumentThreeIndex = 0;
+	Int total = 0;
+
+	for (
+		argumentThreeIndex = 0;
+		argumentThreeIndex < argumentOne * argumentTwo;
+		argumentThreeIndex++
+	) {
+		total += argumentThree[argumentThreeIndex].count;
+	}
+}
+
+don't limit yourself to 80 columns per line, but don't exceed it by too much, if it becomes too long, read the entries above.
+use the types provided by acyacsl.h.
+
+don't use "i" as a variable name, write an actually descriptive name for the indexing variable, if the use case is so general that you can't think of anything, use "index" instead
+
+try to write dumb imperative code, don't be too clever.
+
+initialize every variable that you declare, no exceptions, it doesn't matter if it's being initialized later, at some point someone might write code between the declaration and initialization and then you have a bug. the compiler will optimize that anyway, even if it doesn't, it's not like setting a variable to zero is a huge inefficiency.
+if you don't have good default, use {0}.
+
+use const as much as possible
