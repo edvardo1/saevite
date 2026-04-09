@@ -37,7 +37,6 @@ typedef struct {
 
 	gooey_Texture renderTarget;
 	Bool drawingNecessary;
-	I32 cursor;
 } saevite_Ste;
 
 Void toGlyphs(String8 str, npfont_Glyph **glyphs, U32 *len) {
@@ -109,6 +108,10 @@ Void saevite_update(saevite_Ste *saevite) {
 	U64 key = 0;
 	U32 keyMod = 0;
 	Bool isDown = false;
+	Int *cursor = NULL;
+
+	assert(buffer->cursors.len > 0);
+	cursor = &buffer->cursors.items[buffer->cursors.len - 1].position;
 
 	gooey_waitEvent(saevite->gctx, &gev);
 
@@ -117,35 +120,35 @@ Void saevite_update(saevite_Ste *saevite) {
 		if (key == '\r') {key = '\n';}
 
 		if (!!(keyMod & gooey_KEYMOD_LCTRL) && key == 'z') {
-			saevite_undoSingle(buffer, &saevite->cursor);
+			saevite_undoSingle(buffer, cursor);
 			saevite->drawingNecessary = true;
 
 			saevite_printBuffer(buffer);
-			printf("cursor: %d\n", saevite->cursor);
+			printf("cursor: %d\n", *cursor);
 		} else if (!!(keyMod & gooey_KEYMOD_LCTRL) && key == 'y') {
-			saevite_redoSingle(buffer, &saevite->cursor);
+			saevite_redoSingle(buffer, cursor);
 			saevite->drawingNecessary = true;
 
 			saevite_printBuffer(buffer);
-			printf("cursor: %d\n", saevite->cursor);
+			printf("cursor: %d\n", *cursor);
 		} else if (key == 8) {
-			saevite_deleteChar(buffer, saevite->cursor - 1);
-			saevite->cursor -= 1;
-			if (saevite->cursor < 0) {saevite->cursor = 0;}
+			saevite_deleteChar(buffer, *cursor - 1);
+			*cursor -= 1;
+			if (*cursor < 0) {*cursor = 0;}
 			saevite->drawingNecessary = true;
 
 			saevite_printBuffer(buffer);
-			printf("cursor: %d\n", saevite->cursor);
+			printf("cursor: %d\n", *cursor);
 		//} else if (key == 'q') {
 		//	gooey_setWindowShouldClose(saevite->gctx, true);
 		} else if (key == SDLK_LEFT) {
 			/* @todo change this from SDL to gooey */
-			saevite->cursor -= 1;
-			if (saevite->cursor < 0) {saevite->cursor = 0;}
+			*cursor -= 1;
+			if (*cursor < 0) {*cursor = 0;}
 			saevite->drawingNecessary = true;
 		} else if (key == SDLK_RIGHT) {
 			/* @todo change this from SDL to gooey */
-			saevite->cursor += 1;
+			*cursor += 1;
 			saevite->drawingNecessary = true;
 		} else if (key == '\n' || key == ' ' || key == '\t' || (key >= '!' && key <= '~')) {
 			if (key == '\n') {
@@ -154,13 +157,13 @@ Void saevite_update(saevite_Ste *saevite) {
 			} else {
 				buffer->doMergeInsertedChars = true;
 			}
-			saevite_insertChar(buffer, saevite->cursor, key);
+			saevite_insertChar(buffer, *cursor, key);
 
-			saevite->cursor += 1;
+			*cursor += 1;
 			saevite->drawingNecessary = true;
 
 			saevite_printBuffer(buffer);
-			printf("cursor: %d\n", saevite->cursor);
+			printf("cursor: %d\n", *cursor);
 		}
 	}
 }
@@ -189,6 +192,10 @@ Void saevite_renderBuffer(saevite_Ste *saevite, saevite_Buffer *buffer) {
 	npfont_FontSize defaultFontSize = 0;
 	I32 defaultYDiff = 0;
 	I32 byteCount = 0;
+	Int cursorPosition = 0;
+
+	assert(buffer->cursors.len > 0);
+	cursorPosition = buffer->cursors.items[buffer->cursors.len - 1].position;
 
 	npfont_getAscent(saevite->fctx, -1, &defaultAscent);
 	npfont_getDescent(saevite->fctx, -1, &defaultDescent);
@@ -210,7 +217,7 @@ Void saevite_renderBuffer(saevite_Ste *saevite, saevite_Buffer *buffer) {
 			byteCount += 1
 		) {
 			if (codepoint == '\n') {
-				if (byteCount == saevite->cursor) {
+				if (byteCount == cursorPosition) {
 					drawCursor(saevite, xPos, yPos, defaultAscent, defaultDescent);
 				}
 				xPos = 100;
@@ -243,7 +250,7 @@ Void saevite_renderBuffer(saevite_Ste *saevite, saevite_Buffer *buffer) {
 				);
 			}
 
-			if (byteCount == saevite->cursor) {
+			if (byteCount == cursorPosition) {
 				drawCursor(saevite, xPos, yPos, defaultAscent, defaultDescent);
 			}
 
@@ -257,7 +264,7 @@ Void saevite_renderBuffer(saevite_Ste *saevite, saevite_Buffer *buffer) {
 			}
 		}
 
-		if (byteCount == saevite->cursor) {
+		if (byteCount == cursorPosition) {
 			drawCursor(saevite, xPos, yPos, defaultAscent, defaultDescent);
 		}
 	}
@@ -424,6 +431,7 @@ Int main(Void) {
 	//saevite_insertChar(&saevite.buffer, 2, 'o');
 
 	daAppendZ(&saevite.buffers);
+	saevite_buffer_init(&saevite.buffers.items[saevite.buffers.len - 1]);
 	daAppendZ(&saevite.windows);
 	saevite.windows.items[0].bufferIndex = 0;
 

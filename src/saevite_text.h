@@ -5,11 +5,17 @@
 
 typedef struct saevite_Buffer saevite_Buffer;
 typedef struct saevite_Action saevite_Action;
+typedef struct saevite_Cursor saevite_Cursor;
 
 struct saevite_Action {
 	Uint currentPiecesIndex;
 	Uint allPiecesBeforeIndex;
 	Uint allPiecesAfterIndex;
+};
+
+struct saevite_Cursor {
+	Int position;
+	Uint clipboardRegisterIndex; /* reserved */
 };
 
 typedef enum saevite_BufferMode {
@@ -20,7 +26,7 @@ typedef enum saevite_BufferMode {
 } saevite_BufferMode;
 
 struct saevite_Buffer {
-	DynamicArray(Uint) cursors;
+	DynamicArray(saevite_Cursor) cursors;
 	DynamicArray(String8) allPieces;
 	DynamicArray(Uint) currentPieces;
 	DynamicArray(saevite_Action) actions;
@@ -33,10 +39,16 @@ struct saevite_Buffer {
 	Bool doMergeInsertedChars;
 };
 
+Void saevite_buffer_init(saevite_Buffer *buffer);
 Void printPieceString(String8 string);
 Void saevite_printBuffer(const saevite_Buffer *buffer);
 Void saevite_printBufferContents(const saevite_Buffer *buffer);
 Void saevite_stringFromBuffer(const saevite_Buffer *buffer, String8 *string);
+
+Int saevite_buffer_getCursorAmount(const saevite_Buffer *buffer);
+Void saevite_buffer_getCursorPosition(const saevite_Buffer *buffer, Uint index, Uint *position);
+Void saevite_buffer_setCursorPosition(saevite_Buffer *buffer, Uint index, Uint position);
+
 Int saevite__buffer_getPieceInfoFromPosition(const saevite_Buffer *buffer, Uint position, Uint *pieceIndex, Uint *len);
 Void saevite_pieceNew(saevite_Buffer *buffer, String8 str, Uint *index);
 Void saevite__doAction(saevite_Buffer *buffer, const saevite_Action *action);

@@ -8,6 +8,12 @@
 
 const Uint full = 0xffffffff;
 
+Void saevite_buffer_init(saevite_Buffer *buffer) {
+	daAppendZ(&buffer->cursors);
+	buffer->cursors.items[buffer->cursors.len - 1].position = 0;
+	buffer->cursors.items[buffer->cursors.len - 1].clipboardRegisterIndex = 0;
+}
+
 Void printPieceString(String8 string) {
 	Usize i = 0;
 	Char c = 0;
