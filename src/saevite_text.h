@@ -9,7 +9,7 @@ typedef struct saevite_Cursor saevite_Cursor;
 
 struct saevite_Action {
 	Uint currentPiecesIndex;
-	Uint allPiecesBeforeIndex;
+	Uint allPiecesBeforeIndex; /* or cursor position */
 	Uint allPiecesAfterIndex;
 };
 
@@ -61,25 +61,14 @@ Void saevite_deleteSelection(saevite_Buffer *buffer, Uint position, Uint len);
 Int saevite_deleteChar(saevite_Buffer *buffer, Uint position);
 
 saevite_Action saevite__action(Uint currentPiecesIndex, Uint allPiecesBeforeIndex, Uint allPiecesAfterIndex);
-saevite_Action saevite_makeUndoAction(Void);
+saevite_Action saevite_makeUndoMarkerAction(Void);
 saevite_Action saevite_makeReplaceAction(Uint currentPiecesIndex, Uint allPiecesBeforeIndex, Uint allPiecesAfterIndex);
 saevite_Action saevite_makeInsertAction(Uint currentPiecesIndex, Uint allPiecesAfterIndex);
 saevite_Action saevite_makeRemoveAction(Uint currentPiecesIndex, Uint allPiecesBeforeIndex);
-Bool saevite_actionIsUndo(const saevite_Action *action);
-Bool saevite_actionIsReplace(
-	const saevite_Action *action,
-	Uint *currentPiecesIndex,
-	Uint *allPiecesBeforeIndex,
-	Uint *allPiecesAfterIndex
-);
-Bool saevite_actionIsInsert(
-	const saevite_Action *action,
-	Uint *currentPiecesIndex,
-	Uint *allPiecesBeforeIndex
-);
-Bool saevite_actionIsRemove(
-	const saevite_Action *action,
-	Uint *currentPiecesIndex
-);
+Bool saevite_actionIsUndoMarker(const saevite_Action *action);
+Bool saevite_actionIsReplace(const saevite_Action *action);
+Bool saevite_actionIsInsert(const saevite_Action *action);
+Bool saevite_actionIsRemove(const saevite_Action *action);
+Void saevite_buffer_addUndoMarkerIfNecessary(saevite_Buffer *buffer);
 
 #endif /* !defined(STE_TEXT_H) */

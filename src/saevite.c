@@ -101,6 +101,8 @@ Bool saevite_windowShouldClose(saevite_Ste *saevite) {
 	return gooey_windowShouldClose(saevite->gctx);
 }
 
+void breakfun(void) {}
+
 Void saevite_update(saevite_Ste *saevite) {
 	saevite_Window *window = &saevite->windows.items[0];
 	saevite_Buffer *buffer = &saevite->buffers.items[window->bufferIndex];
@@ -120,13 +122,13 @@ Void saevite_update(saevite_Ste *saevite) {
 		if (key == '\r') {key = '\n';}
 
 		if (!!(keyMod & gooey_KEYMOD_LCTRL) && key == 'z') {
-			saevite_undoSingle(buffer, cursor);
+			saevite_undo(buffer, cursor);
 			saevite->drawingNecessary = true;
 
 			saevite_printBuffer(buffer);
 			printf("cursor: %d\n", *cursor);
 		} else if (!!(keyMod & gooey_KEYMOD_LCTRL) && key == 'y') {
-			saevite_redoSingle(buffer, cursor);
+			saevite_redo(buffer, cursor);
 			saevite->drawingNecessary = true;
 
 			saevite_printBuffer(buffer);
@@ -143,21 +145,44 @@ Void saevite_update(saevite_Ste *saevite) {
 		//	gooey_setWindowShouldClose(saevite->gctx, true);
 		} else if (key == SDLK_LEFT) {
 			/* @todo change this from SDL to gooey */
+			saevite_buffer_addUndoMarkerIfNecessary(buffer);
 			*cursor -= 1;
 			if (*cursor < 0) {*cursor = 0;}
 			saevite->drawingNecessary = true;
 		} else if (key == SDLK_RIGHT) {
 			/* @todo change this from SDL to gooey */
+			saevite_buffer_addUndoMarkerIfNecessary(buffer);
 			*cursor += 1;
 			saevite->drawingNecessary = true;
 		} else if (key == '\n' || key == ' ' || key == '\t' || (key >= '!' && key <= '~')) {
+			//if (key == '\n') {
+			//	buffer->doMergeInsertedChars = false;
+			//	buffer->mode = saevite_BufferMode_None;
+			//} else {
+			//	buffer->doMergeInsertedChars = true;
+			//}
+			buffer->doMergeInsertedChars = true;
 			if (key == '\n') {
-				buffer->doMergeInsertedChars = false;
-				buffer->mode = saevite_BufferMode_None;
+				daAppend(
+					&buffer->actions,
+					saevite_makeUndoMarkerAction()
+				);
+				buffer->actionsTop += 1;
+
+				saevite_insertChar(buffer, *cursor, key);
+
+				daAppend(
+					&buffer->actions,
+					saevite_makeUndoMarkerAction()
+				);
+				buffer->actionsTop += 1;
 			} else {
-				buffer->doMergeInsertedChars = true;
+				if (key == 'r') {
+					saevite_printBuffer(buffer);
+					breakfun();
+				}
+				saevite_insertChar(buffer, *cursor, key);
 			}
-			saevite_insertChar(buffer, *cursor, key);
 
 			*cursor += 1;
 			saevite->drawingNecessary = true;
