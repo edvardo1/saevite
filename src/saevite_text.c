@@ -83,22 +83,22 @@ Void saevite_printBuffer(const saevite_Buffer *buffer) {
 		}
 
 		if (saevite_actionIsUndoMarker(action)) {
-			printf("[%ld] = undo marker, %d -> %d\n", i, action->allPiecesBeforeIndex, action->allPiecesAfterIndex);
-		} else if (action->allPiecesBeforeIndex == full && action->allPiecesAfterIndex == full) {
+			printf("[%ld] = undo marker, %d -> %d\n", i, action->before, action->after);
+		} else if (action->before == full && action->after == full) {
 			printf("[%ld] = invalid\n", i);
-		} else if (action->allPiecesBeforeIndex == full && action->allPiecesAfterIndex != full) {
+		} else if (action->before == full && action->after != full) {
 			printf("[%ld] = insert: ", i);
-			printPieceString(buffer->allPieces.items[action->allPiecesAfterIndex]);
+			printPieceString(buffer->allPieces.items[action->after]);
 			printf(" in %d\n", action->currentPiecesIndex);
-		} else if (action->allPiecesBeforeIndex != full && action->allPiecesAfterIndex == full) {
+		} else if (action->before != full && action->after == full) {
 			printf("[%ld] = remove: ", i);
-			printPieceString(buffer->allPieces.items[action->allPiecesBeforeIndex]);
+			printPieceString(buffer->allPieces.items[action->before]);
 			printf(" in %d\n", action->currentPiecesIndex);
-		} else if (action->allPiecesBeforeIndex != full && action->allPiecesAfterIndex != full) {
+		} else if (action->before != full && action->after != full) {
 			printf("[%ld] = replace: ", i);
-			printPieceString(buffer->allPieces.items[action->allPiecesBeforeIndex]);
+			printPieceString(buffer->allPieces.items[action->before]);
 			printf(" to ");
-			printPieceString(buffer->allPieces.items[action->allPiecesAfterIndex]);
+			printPieceString(buffer->allPieces.items[action->after]);
 			printf(" in %d\n", action->currentPiecesIndex);
 		} else {
 			assert(0);
@@ -183,14 +183,14 @@ Void saevite_pieceNew(saevite_Buffer *buffer, String8 str, Uint *index) {
 
 void saevite__doAction(saevite_Buffer *buffer, const saevite_Action *action) {
 	if (action->currentPiecesIndex != full) {
-		if (action->allPiecesBeforeIndex != full && action->allPiecesAfterIndex != full) {
+		if (action->before != full && action->after != full) {
 			assert(
 				buffer->currentPieces.items[action->currentPiecesIndex] ==
-				action->allPiecesBeforeIndex
+				action->before
 			);
 			buffer->currentPieces.items[action->currentPiecesIndex] =
-				action->allPiecesAfterIndex;
-		} else if (action->allPiecesBeforeIndex != full) {
+				action->after;
+		} else if (action->before != full) {
 			memmove(
 				&buffer->currentPieces.items[action->currentPiecesIndex],
 				&buffer->currentPieces.items[action->currentPiecesIndex + 1],
@@ -198,7 +198,7 @@ void saevite__doAction(saevite_Buffer *buffer, const saevite_Action *action) {
 				sizeof(*buffer->currentPieces.items)
 			);
 			buffer->currentPieces.len -= 1;
-		} else if (action->allPiecesAfterIndex != full) {
+		} else if (action->after != full) {
 			/* insert a */
 			daAppendZ(&buffer->currentPieces);
 			memmove(
@@ -208,7 +208,7 @@ void saevite__doAction(saevite_Buffer *buffer, const saevite_Action *action) {
 				sizeof(*buffer->currentPieces.items)
 			);
 			buffer->currentPieces.items[action->currentPiecesIndex] =
-					action->allPiecesAfterIndex;
+					action->after;
 		} else {
 			assert(0);
 		}
@@ -221,18 +221,18 @@ void saevite__actionReverse(saevite_Action *dst, const saevite_Action *src) {
 	if (src_copy.currentPiecesIndex != full) {
 		dst->currentPiecesIndex = src_copy.currentPiecesIndex;
 
-		if (src_copy.allPiecesBeforeIndex != full && src_copy.allPiecesAfterIndex != full) {
+		if (src_copy.before != full && src_copy.after != full) {
 			/* replace a b -> replace b a */
-			dst->allPiecesAfterIndex = src_copy.allPiecesBeforeIndex;
-			dst->allPiecesBeforeIndex = src_copy.allPiecesAfterIndex;
-		} else if (src_copy.allPiecesBeforeIndex != full) {
+			dst->after = src_copy.before;
+			dst->before = src_copy.after;
+		} else if (src_copy.before != full) {
 			/* remove a -> insert a */
-			dst->allPiecesAfterIndex = src_copy.allPiecesBeforeIndex;
-			dst->allPiecesBeforeIndex = full;
-		} else if (src_copy.allPiecesAfterIndex != full) {
+			dst->after = src_copy.before;
+			dst->before = full;
+		} else if (src_copy.after != full) {
 			/* insert a -> remove a */
-			dst->allPiecesAfterIndex = full;
-			dst->allPiecesBeforeIndex = src_copy.allPiecesAfterIndex;
+			dst->after = full;
+			dst->before = src_copy.after;
 		} else {
 			assert(0);
 		}
@@ -249,7 +249,7 @@ Void saevite__actionCursor(const saevite_Buffer *buffer, const saevite_Action *a
 		return;
 	}
 
-	if (action->allPiecesAfterIndex == full) {
+	if (action->after == full) {
 		cpMaxIndex = action->currentPiecesIndex;
 	} else {
 		cpMaxIndex = action->currentPiecesIndex + 1;
@@ -441,7 +441,7 @@ Void saevite_insertChar(saevite_Buffer *buffer, Uint position, Char c) {
 		position == buffer->lastPosition + 1 &&
 		(saevite_actionIsInsert(&buffer->actions.items[buffer->actionsTop - 1]) ||
 		 saevite_actionIsReplace(&buffer->actions.items[buffer->actionsTop - 1])) &&
-		buffer->actions.items[buffer->actionsTop - 1].allPiecesAfterIndex ==
+		buffer->actions.items[buffer->actionsTop - 1].after ==
 			buffer->lastCharAllPiecesIndex
 	) {
 		buffer->allPieces.items[buffer->lastCharAllPiecesIndex].buf = 
@@ -555,11 +555,11 @@ Int saevite_deleteChar(saevite_Buffer *buffer, Uint position) {
 	}
 }
 
-saevite_Action saevite__action(Uint currentPiecesIndex, Uint allPiecesBeforeIndex, Uint allPiecesAfterIndex) {
+saevite_Action saevite__action(Uint currentPiecesIndex, Uint before, Uint after) {
 	saevite_Action action = {0};
 	action.currentPiecesIndex = currentPiecesIndex;
-	action.allPiecesBeforeIndex = allPiecesBeforeIndex;
-	action.allPiecesAfterIndex = allPiecesAfterIndex;
+	action.before = before;
+	action.after = after;
 	return action;
 }
 
@@ -567,23 +567,23 @@ saevite_Action saevite_makeUndoMarkerAction(Void) {
 	return saevite__action((Uint)-1, 0, 0);
 }
 
-saevite_Action saevite_makeReplaceAction(Uint currentPiecesIndex, Uint allPiecesBeforeIndex, Uint allPiecesAfterIndex) {
+saevite_Action saevite_makeReplaceAction(Uint currentPiecesIndex, Uint before, Uint after) {
 	assert(currentPiecesIndex != (Uint)-1);
-	assert(allPiecesBeforeIndex != (Uint)-1);
-	assert(allPiecesAfterIndex != (Uint)-1);
-	return saevite__action(currentPiecesIndex, allPiecesBeforeIndex, allPiecesAfterIndex);
+	assert(before != (Uint)-1);
+	assert(after != (Uint)-1);
+	return saevite__action(currentPiecesIndex, before, after);
 }
 
-saevite_Action saevite_makeInsertAction(Uint currentPiecesIndex, Uint allPiecesAfterIndex) {
+saevite_Action saevite_makeInsertAction(Uint currentPiecesIndex, Uint after) {
 	assert(currentPiecesIndex != (Uint)-1);
-	assert(allPiecesAfterIndex != (Uint)-1);
-	return saevite__action(currentPiecesIndex, (Uint)-1, allPiecesAfterIndex);
+	assert(after != (Uint)-1);
+	return saevite__action(currentPiecesIndex, (Uint)-1, after);
 }
 
-saevite_Action saevite_makeRemoveAction(Uint currentPiecesIndex, Uint allPiecesBeforeIndex) {
+saevite_Action saevite_makeRemoveAction(Uint currentPiecesIndex, Uint before) {
 	assert(currentPiecesIndex != (Uint)-1);
-	assert(allPiecesBeforeIndex != (Uint)-1);
-	return saevite__action(currentPiecesIndex, allPiecesBeforeIndex, (Uint)-1);
+	assert(before != (Uint)-1);
+	return saevite__action(currentPiecesIndex, before, (Uint)-1);
 }
 
 Bool saevite_actionIsUndoMarker(const saevite_Action *action) {
@@ -593,22 +593,22 @@ Bool saevite_actionIsUndoMarker(const saevite_Action *action) {
 Bool saevite_actionIsReplace(const saevite_Action *action) {
 	return
 		action->currentPiecesIndex != (Uint)-1 &&
-		action->allPiecesBeforeIndex != (Uint)-1 &&
-		action->allPiecesAfterIndex != (Uint)-1;
+		action->before != (Uint)-1 &&
+		action->after != (Uint)-1;
 }
 
 Bool saevite_actionIsInsert(const saevite_Action *action) {
 	return
 		action->currentPiecesIndex != (Uint)-1 &&
-		action->allPiecesBeforeIndex == (Uint)-1 &&
-		action->allPiecesAfterIndex != (Uint)-1;
+		action->before == (Uint)-1 &&
+		action->after != (Uint)-1;
 }
 
 Bool saevite_actionIsRemove(const saevite_Action *action) {
 	return
 		action->currentPiecesIndex != (Uint)-1 &&
-		action->allPiecesBeforeIndex != (Uint)-1 &&
-		action->allPiecesAfterIndex == (Uint)-1;
+		action->before != (Uint)-1 &&
+		action->after == (Uint)-1;
 }
 
 Void saevite_buffer_addUndoMarkerIfNecessary(saevite_Buffer *buffer) {

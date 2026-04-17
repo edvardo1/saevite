@@ -9,8 +9,8 @@ typedef struct saevite_Cursor saevite_Cursor;
 
 struct saevite_Action {
 	Uint currentPiecesIndex;
-	Uint allPiecesBeforeIndex; /* or cursor position */
-	Uint allPiecesAfterIndex;
+	Uint before;
+	Uint after;
 };
 
 struct saevite_Cursor {
