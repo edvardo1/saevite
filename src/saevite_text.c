@@ -438,24 +438,25 @@ Void saevite_insertChar(saevite_Buffer *buffer, Int cursorIndex, Uint position, 
 	Uint pieceIndex = 0, len = 0;
 	Uint cpIndex = 0;
 	Int err = 0;
+	saevite_Cursor *cursor = &buffer->cursors.items[cursorIndex];
+	const saevite_Action *action = &buffer->actions.items[cursor->lastActionIndex];
 
 	if (
-		position == buffer->cursors.items[cursorIndex].lastPosition + 1 &&
-		(saevite_actionIsInsert(&buffer->actions.items[buffer->actionsTop - 1]) ||
-		 saevite_actionIsReplace(&buffer->actions.items[buffer->actionsTop - 1])) &&
-		buffer->actions.items[buffer->actionsTop - 1].after ==
-			buffer->cursors.items[cursorIndex].lastCharAllPiecesIndex
+		cursor->isInsertingChars &&
+		position == cursor->lastPosition + 1 &&
+		(saevite_actionIsInsert(action) || saevite_actionIsReplace(action)) &&
+		action->after == cursor->lastCharAllPiecesIndex
 	) {
-		buffer->allPieces.items[buffer->cursors.items[cursorIndex].lastCharAllPiecesIndex].buf = 
+		buffer->allPieces.items[cursor->lastCharAllPiecesIndex].buf = 
 			realloc(
-				buffer->allPieces.items[buffer->cursors.items[cursorIndex].lastCharAllPiecesIndex].buf,
-				buffer->allPieces.items[buffer->cursors.items[cursorIndex].lastCharAllPiecesIndex].len + 1
+				buffer->allPieces.items[cursor->lastCharAllPiecesIndex].buf,
+				buffer->allPieces.items[cursor->lastCharAllPiecesIndex].len + 1
 			);
-		buffer->allPieces.items[buffer->cursors.items[cursorIndex].lastCharAllPiecesIndex].len += 1;
-		buffer->allPieces.items[buffer->cursors.items[cursorIndex].lastCharAllPiecesIndex].buf[
-			buffer->allPieces.items[buffer->cursors.items[cursorIndex].lastCharAllPiecesIndex].len - 1
+		buffer->allPieces.items[cursor->lastCharAllPiecesIndex].len += 1;
+		buffer->allPieces.items[cursor->lastCharAllPiecesIndex].buf[
+			buffer->allPieces.items[cursor->lastCharAllPiecesIndex].len - 1
 		] = c;
-		buffer->cursors.items[cursorIndex].lastPosition = position;
+		cursor->lastPosition = position;
 	} else {
 		str.buf = malloc(1);
 		assert(str.buf != NULL);
@@ -463,7 +464,8 @@ Void saevite_insertChar(saevite_Buffer *buffer, Int cursorIndex, Uint position, 
 		str.len = 1;
 		saevite_pieceNew(buffer, str, &cpIndex);
 
-		buffer->cursors.items[cursorIndex].lastPosition = position;
+		cursor->isInsertingChars = true;
+		cursor->lastPosition = position;
 
 		if (buffer->currentPieces.len > 0) {
 			err = saevite__buffer_getPieceInfoFromPosition(buffer, position, &pieceIndex, &len);
@@ -472,10 +474,12 @@ Void saevite_insertChar(saevite_Buffer *buffer, Int cursorIndex, Uint position, 
 		if (buffer->currentPieces.len <= 0 || err) {
 			if (position == 0) {
 				saevite__buffer_pieceInsert(buffer, 0, cpIndex);
-				buffer->cursors.items[cursorIndex].lastCharAllPiecesIndex = buffer->currentPieces.items[0];
+				cursor->lastCharAllPiecesIndex = buffer->currentPieces.items[0];
+				cursor->lastActionIndex = buffer->actionsTop - 1;
 			} else {
 				saevite__buffer_pieceInsert(buffer, buffer->currentPieces.len, cpIndex);
-				buffer->cursors.items[cursorIndex].lastCharAllPiecesIndex = buffer->allPieces.len - 1;
+				cursor->lastActionIndex = buffer->actionsTop - 1;
+				cursor->lastCharAllPiecesIndex = buffer->allPieces.len - 1;
 			}
 		} else {
 			saevite__buffer_pieceGetString(buffer, pieceIndex, &oldStr);
@@ -487,10 +491,12 @@ Void saevite_insertChar(saevite_Buffer *buffer, Int cursorIndex, Uint position, 
 			if (len > 0) {
 				saevite__buffer_newPieceInsert(buffer, pieceIndex, strSlice(oldStr, 0, len));
 				saevite__buffer_pieceReplace(buffer, pieceIndex + 1, cpIndex);
-				buffer->cursors.items[cursorIndex].lastCharAllPiecesIndex = buffer->currentPieces.items[pieceIndex + 1];
+				cursor->lastCharAllPiecesIndex = buffer->currentPieces.items[pieceIndex + 1];
+				cursor->lastActionIndex = buffer->actionsTop - 1;
 			} else {
 				saevite__buffer_pieceReplace(buffer, pieceIndex, cpIndex);
-				buffer->cursors.items[cursorIndex].lastCharAllPiecesIndex = buffer->currentPieces.items[pieceIndex];
+				cursor->lastCharAllPiecesIndex = buffer->currentPieces.items[pieceIndex];
+				cursor->lastActionIndex = buffer->actionsTop - 1;
 			}
 		}
 	}
@@ -536,14 +542,17 @@ Int saevite_deleteChar(saevite_Buffer *buffer, Uint position) {
 	} else {
 		saevite__buffer_getPieceInfoFromPosition(buffer, position, &pieceIndex, &len);
 		saevite__buffer_pieceGetString(buffer, pieceIndex, &str);
-	
-		saevite__buffer_pieceRemove(buffer, pieceIndex);
 		lastBegin = len + 1;
-		if (lastBegin - str.len > 0) {
-			saevite__buffer_newPieceInsert(buffer, pieceIndex, strSlice(str, lastBegin, str.len - lastBegin));
-		}
-		if (len > 0) {
+	
+		if (lastBegin - str.len > 0 && len > 0) {
+			saevite__buffer_newPieceReplace(buffer, pieceIndex, strSlice(str, lastBegin, str.len - lastBegin));
 			saevite__buffer_newPieceInsert(buffer, pieceIndex, strSlice(str, 0, len));
+		} else if (lastBegin - str.len > 0) {
+			saevite__buffer_newPieceReplace(buffer, pieceIndex, strSlice(str, lastBegin, str.len - lastBegin));
+		} else if (len > 0) {
+			saevite__buffer_newPieceReplace(buffer, pieceIndex, strSlice(str, 0, len));
+		} else {
+			saevite__buffer_pieceRemove(buffer, pieceIndex);
 		}
 
 		return 0;
@@ -607,9 +616,15 @@ Bool saevite_actionIsRemove(const saevite_Action *action) {
 }
 
 Void saevite_buffer_addUndoMarkerIfNecessary(saevite_Buffer *buffer) {
+	Uint cursorIndex = 0;
+
 	assert(buffer->actionsTop <= buffer->actions.len);
 	if (buffer->actionsTop == 0) {
 		return;
+	}
+
+	for (cursorIndex = 0; cursorIndex < buffer->cursors.len; cursorIndex += 1) {
+		buffer->cursors.items[cursorIndex].isInsertingChars = false;
 	}
 
 	if (!saevite_actionIsUndoMarker(&buffer->actions.items[buffer->actionsTop - 1])) {

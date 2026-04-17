@@ -17,8 +17,10 @@ struct saevite_Cursor {
 	Int position;
 	Uint clipboardRegisterIndex; /* reserved */
 
+	Bool isInsertingChars;
 	Uint lastPosition;
 	Uint lastCharAllPiecesIndex;
+	Uint lastActionIndex;
 };
 
 struct saevite_Buffer {

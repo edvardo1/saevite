@@ -415,20 +415,19 @@ Void test_5(Void) {
 
 	saevite_buffer_init(&buffer);
 
-	//buffer.doMergeInsertedChars = true;
 	saevite_insertChar(&buffer, 0, 0, 'a');
 	saevite_insertChar(&buffer, 0, 1, 'b');
 	saevite_insertChar(&buffer, 0, 2, 'c');
 
-	//buffer.doMergeInsertedChars = false;
+	saevite_buffer_addUndoMarkerIfNecessary(&buffer);
 	saevite_insertChar(&buffer, 0, 3, '\n');
+	saevite_buffer_addUndoMarkerIfNecessary(&buffer);
 
-	//buffer.doMergeInsertedChars = true;
 	saevite_insertChar(&buffer, 0, 4, 'd');
 	saevite_insertChar(&buffer, 0, 5, 'e');
 	saevite_insertChar(&buffer, 0, 6, 'f');
 
-	saevite_undoSingle(&buffer, NULL);
+	saevite_undo(&buffer, NULL);
 
 	saevite_stringFromBuffer(&buffer, &result);
 	finishTest(S("5"), &buffer, S("abc\n"));
@@ -441,14 +440,10 @@ Int main(Void) {
 	saevite.drawingNecessary = true;
 
 	test_1();
-	//test_2();
-	//test_3();
-	//test_4();
-	//test_5();
-
-	//saevite_insertChar(&saevite.buffer, 0, 0, 'e');
-	//saevite_insertChar(&saevite.buffer, 0, 1, 'd');
-	//saevite_insertChar(&saevite.buffer, 0, 2, 'o');
+	test_2();
+	test_3();
+	test_4();
+	test_5();
 
 	daAppendZ(&saevite.buffers);
 	saevite_buffer_init(&saevite.buffers.items[saevite.buffers.len - 1]);
