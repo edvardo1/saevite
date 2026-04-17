@@ -442,7 +442,7 @@ Void saevite_insertChar(saevite_Buffer *buffer, Int cursorIndex, Uint position, 
 	const saevite_Action *action = &buffer->actions.items[cursor->lastActionIndex];
 
 	if (
-		cursor->isInsertingChars &&
+		cursor->mode == saevite_CursorMode_InsertingChars &&
 		position == cursor->lastPosition + 1 &&
 		(saevite_actionIsInsert(action) || saevite_actionIsReplace(action)) &&
 		action->after == cursor->lastCharAllPiecesIndex
@@ -464,7 +464,7 @@ Void saevite_insertChar(saevite_Buffer *buffer, Int cursorIndex, Uint position, 
 		str.len = 1;
 		saevite_pieceNew(buffer, str, &cpIndex);
 
-		cursor->isInsertingChars = true;
+		cursor->mode = saevite_CursorMode_InsertingChars;
 		cursor->lastPosition = position;
 
 		if (buffer->currentPieces.len > 0) {
@@ -624,7 +624,7 @@ Void saevite_buffer_addUndoMarkerIfNecessary(saevite_Buffer *buffer) {
 	}
 
 	for (cursorIndex = 0; cursorIndex < buffer->cursors.len; cursorIndex += 1) {
-		buffer->cursors.items[cursorIndex].isInsertingChars = false;
+		buffer->cursors.items[cursorIndex].mode = saevite_CursorMode_None;
 	}
 
 	if (!saevite_actionIsUndoMarker(&buffer->actions.items[buffer->actionsTop - 1])) {

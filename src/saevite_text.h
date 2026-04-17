@@ -13,11 +13,17 @@ struct saevite_Action {
 	Uint after;
 };
 
+typedef enum {
+	saevite_CursorMode_None,
+	saevite_CursorMode_InsertingChars,
+	saevite_CursorMode_DeletingChars,
+} saevite_CursorMode;
+
 struct saevite_Cursor {
 	Int position;
 	Uint clipboardRegisterIndex; /* reserved */
 
-	Bool isInsertingChars;
+	saevite_CursorMode mode;
 	Uint lastPosition;
 	Uint lastCharAllPiecesIndex;
 	Uint lastActionIndex;
