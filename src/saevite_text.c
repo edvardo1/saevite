@@ -171,6 +171,10 @@ Int saevite__buffer_getPieceInfoFromPosition(const saevite_Buffer *buffer, Uint 
 		}
 	}
 
+	if (cumPosition == 0 && pieceIndex != NULL) {
+		*pieceIndex = buffer->currentPieces.len;
+	}
+
 	return 1;
 }
 
@@ -402,10 +406,9 @@ Void saevite__buffer_newPieceReplace(saevite_Buffer *buffer, Uint currentPiecesP
 Void saevite_insertString(saevite_Buffer *buffer, Uint position, String8 str) {
 	String8 oldStr = {0};
 	Uint pieceIndex = 0, len = 0;
+	Int err = 0;
 
-	buffer->mode = saevite_BufferMode_None;
-
-	saevite__buffer_getPieceInfoFromPosition(buffer, position, &pieceIndex, &len);
+	err = saevite__buffer_getPieceInfoFromPosition(buffer, position, &pieceIndex, &len);
 
 	if (pieceIndex < buffer->currentPieces.len) {
 		saevite__buffer_pieceGetString(buffer, pieceIndex, &oldStr);
@@ -424,11 +427,12 @@ Void saevite_insertString(saevite_Buffer *buffer, Uint position, String8 str) {
 			saevite__buffer_newPieceReplace(buffer, pieceIndex, str);
 		}
 	} else {
+		assert(err);
 		saevite__buffer_newPieceInsert(buffer, pieceIndex, str);
 	}
 }
 
-Void saevite_insertChar(saevite_Buffer *buffer, Uint position, Char c) {
+Void saevite_insertChar(saevite_Buffer *buffer, Int cursorIndex, Uint position, Char c) {
 	String8 oldStr = {0};
 	String8 str = {0};
 	Uint pieceIndex = 0, len = 0;
@@ -436,24 +440,22 @@ Void saevite_insertChar(saevite_Buffer *buffer, Uint position, Char c) {
 	Int err = 0;
 
 	if (
-		buffer->doMergeInsertedChars &&
-		buffer->mode == saevite_BufferMode_InsertingChars &&
-		position == buffer->lastPosition + 1 &&
+		position == buffer->cursors.items[cursorIndex].lastPosition + 1 &&
 		(saevite_actionIsInsert(&buffer->actions.items[buffer->actionsTop - 1]) ||
 		 saevite_actionIsReplace(&buffer->actions.items[buffer->actionsTop - 1])) &&
 		buffer->actions.items[buffer->actionsTop - 1].after ==
-			buffer->lastCharAllPiecesIndex
+			buffer->cursors.items[cursorIndex].lastCharAllPiecesIndex
 	) {
-		buffer->allPieces.items[buffer->lastCharAllPiecesIndex].buf = 
+		buffer->allPieces.items[buffer->cursors.items[cursorIndex].lastCharAllPiecesIndex].buf = 
 			realloc(
-				buffer->allPieces.items[buffer->lastCharAllPiecesIndex].buf,
-				buffer->allPieces.items[buffer->lastCharAllPiecesIndex].len + 1
+				buffer->allPieces.items[buffer->cursors.items[cursorIndex].lastCharAllPiecesIndex].buf,
+				buffer->allPieces.items[buffer->cursors.items[cursorIndex].lastCharAllPiecesIndex].len + 1
 			);
-		buffer->allPieces.items[buffer->lastCharAllPiecesIndex].len += 1;
-		buffer->allPieces.items[buffer->lastCharAllPiecesIndex].buf[
-			buffer->allPieces.items[buffer->lastCharAllPiecesIndex].len - 1
+		buffer->allPieces.items[buffer->cursors.items[cursorIndex].lastCharAllPiecesIndex].len += 1;
+		buffer->allPieces.items[buffer->cursors.items[cursorIndex].lastCharAllPiecesIndex].buf[
+			buffer->allPieces.items[buffer->cursors.items[cursorIndex].lastCharAllPiecesIndex].len - 1
 		] = c;
-		buffer->lastPosition = position;
+		buffer->cursors.items[cursorIndex].lastPosition = position;
 	} else {
 		str.buf = malloc(1);
 		assert(str.buf != NULL);
@@ -461,10 +463,7 @@ Void saevite_insertChar(saevite_Buffer *buffer, Uint position, Char c) {
 		str.len = 1;
 		saevite_pieceNew(buffer, str, &cpIndex);
 
-		if (buffer->doMergeInsertedChars) {
-			buffer->mode = saevite_BufferMode_InsertingChars;
-			buffer->lastPosition = position;
-		}
+		buffer->cursors.items[cursorIndex].lastPosition = position;
 
 		if (buffer->currentPieces.len > 0) {
 			err = saevite__buffer_getPieceInfoFromPosition(buffer, position, &pieceIndex, &len);
@@ -473,10 +472,10 @@ Void saevite_insertChar(saevite_Buffer *buffer, Uint position, Char c) {
 		if (buffer->currentPieces.len <= 0 || err) {
 			if (position == 0) {
 				saevite__buffer_pieceInsert(buffer, 0, cpIndex);
-				buffer->lastCharAllPiecesIndex = buffer->currentPieces.items[0];
+				buffer->cursors.items[cursorIndex].lastCharAllPiecesIndex = buffer->currentPieces.items[0];
 			} else {
 				saevite__buffer_pieceInsert(buffer, buffer->currentPieces.len, cpIndex);
-				buffer->lastCharAllPiecesIndex = buffer->allPieces.len - 1;
+				buffer->cursors.items[cursorIndex].lastCharAllPiecesIndex = buffer->allPieces.len - 1;
 			}
 		} else {
 			saevite__buffer_pieceGetString(buffer, pieceIndex, &oldStr);
@@ -488,10 +487,10 @@ Void saevite_insertChar(saevite_Buffer *buffer, Uint position, Char c) {
 			if (len > 0) {
 				saevite__buffer_newPieceInsert(buffer, pieceIndex, strSlice(oldStr, 0, len));
 				saevite__buffer_pieceReplace(buffer, pieceIndex + 1, cpIndex);
-				buffer->lastCharAllPiecesIndex = buffer->currentPieces.items[pieceIndex + 1];
+				buffer->cursors.items[cursorIndex].lastCharAllPiecesIndex = buffer->currentPieces.items[pieceIndex + 1];
 			} else {
 				saevite__buffer_pieceReplace(buffer, pieceIndex, cpIndex);
-				buffer->lastCharAllPiecesIndex = buffer->currentPieces.items[pieceIndex];
+				buffer->cursors.items[cursorIndex].lastCharAllPiecesIndex = buffer->currentPieces.items[pieceIndex];
 			}
 		}
 	}
@@ -506,8 +505,6 @@ Void saevite_deleteSelection(saevite_Buffer *buffer, Uint position, Uint len) {
 	Uint firstLen = 0, lastLen = 0;
 	String8 firstStr = {0}, lastStr = {0};
 	String8 newFirstStr = {0}, newLastStr = {0};
-
-	buffer->mode = saevite_BufferMode_None;
 
 	saevite__buffer_getPieceInfoFromPosition(buffer, position, &firstPieceIndex, &firstLen);
 	saevite__buffer_getPieceInfoFromPosition(buffer, position + len, &lastPieceIndex, &lastLen);
@@ -533,8 +530,6 @@ Void saevite_deleteSelection(saevite_Buffer *buffer, Uint position, Uint len) {
 Int saevite_deleteChar(saevite_Buffer *buffer, Uint position) {
 	Uint pieceIndex = 0, len = 0, lastBegin = 0;
 	String8 str = {0};
-
-	buffer->mode = saevite_BufferMode_None;
 
 	if (buffer->currentPieces.len <= 0) {
 		return 1;

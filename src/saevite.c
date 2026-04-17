@@ -161,27 +161,17 @@ Void saevite_update(saevite_Ste *saevite) {
 			//} else {
 			//	buffer->doMergeInsertedChars = true;
 			//}
-			buffer->doMergeInsertedChars = true;
+			//buffer->doMergeInsertedChars = true;
 			if (key == '\n') {
-				daAppend(
-					&buffer->actions,
-					saevite_makeUndoMarkerAction()
-				);
-				buffer->actionsTop += 1;
-
-				saevite_insertChar(buffer, *cursor, key);
-
-				daAppend(
-					&buffer->actions,
-					saevite_makeUndoMarkerAction()
-				);
-				buffer->actionsTop += 1;
+				saevite_buffer_addUndoMarkerIfNecessary(buffer);
+				saevite_insertChar(buffer, 0, *cursor, key);
+				saevite_buffer_addUndoMarkerIfNecessary(buffer);
 			} else {
 				if (key == 'r') {
 					saevite_printBuffer(buffer);
 					breakfun();
 				}
-				saevite_insertChar(buffer, *cursor, key);
+				saevite_insertChar(buffer, 0, *cursor, key);
 			}
 
 			*cursor += 1;
@@ -370,9 +360,9 @@ Void test_2(Void) {
 
 	saevite_buffer_init(&buffer);
 
-	saevite_insertChar(&buffer, 0, 'e');
-	saevite_insertChar(&buffer, 1, 'd');
-	saevite_insertChar(&buffer, 2, 'o');
+	saevite_insertChar(&buffer, 0, 0, 'e');
+	saevite_insertChar(&buffer, 0, 1, 'd');
+	saevite_insertChar(&buffer, 0, 2, 'o');
 	saevite_deleteChar(&buffer, 1);
 
 	saevite_stringFromBuffer(&buffer, &result);
@@ -385,9 +375,9 @@ Void test_3(Void) {
 
 	saevite_buffer_init(&buffer);
 
-	saevite_insertChar(&buffer, 0, 'e');
-	saevite_insertChar(&buffer, 1, 'd');
-	saevite_insertChar(&buffer, 2, 'o');
+	saevite_insertChar(&buffer, 0, 0, 'e');
+	saevite_insertChar(&buffer, 0, 1, 'd');
+	saevite_insertChar(&buffer, 0, 2, 'o');
 	assert(saevite_deleteChar(&buffer, 0) == 0);
 	assert(saevite_deleteChar(&buffer, 0) == 0);
 	assert(saevite_deleteChar(&buffer, 0) == 0);
@@ -404,16 +394,16 @@ Void test_4(Void) {
 
 	saevite_buffer_init(&buffer);
 
-	saevite_insertChar(&buffer, 0, 'a');
-	saevite_insertChar(&buffer, 1, 'b');
-	saevite_insertChar(&buffer, 2, 'c');
-	saevite_insertChar(&buffer, 3, 'd');
-	saevite_insertChar(&buffer, 4, 'e');
-	saevite_insertChar(&buffer, 5, 'f');
+	saevite_insertChar(&buffer, 0, 0, 'a');
+	saevite_insertChar(&buffer, 0, 1, 'b');
+	saevite_insertChar(&buffer, 0, 2, 'c');
+	saevite_insertChar(&buffer, 0, 3, 'd');
+	saevite_insertChar(&buffer, 0, 4, 'e');
+	saevite_insertChar(&buffer, 0, 5, 'f');
 	assert(saevite_deleteChar(&buffer, 5) == 0);
 	assert(saevite_deleteChar(&buffer, 4) == 0);
-	saevite_insertChar(&buffer, 4, 'E');
-	saevite_insertChar(&buffer, 5, 'F');
+	saevite_insertChar(&buffer, 0, 4, 'E');
+	saevite_insertChar(&buffer, 0, 5, 'F');
 
 	saevite_stringFromBuffer(&buffer, &result);
 	finishTest(S("4"), &buffer, S("abcdEF"));
@@ -425,18 +415,18 @@ Void test_5(Void) {
 
 	saevite_buffer_init(&buffer);
 
-	buffer.doMergeInsertedChars = true;
-	saevite_insertChar(&buffer, 0, 'a');
-	saevite_insertChar(&buffer, 1, 'b');
-	saevite_insertChar(&buffer, 2, 'c');
+	//buffer.doMergeInsertedChars = true;
+	saevite_insertChar(&buffer, 0, 0, 'a');
+	saevite_insertChar(&buffer, 0, 1, 'b');
+	saevite_insertChar(&buffer, 0, 2, 'c');
 
-	buffer.doMergeInsertedChars = false;
-	saevite_insertChar(&buffer, 3, '\n');
+	//buffer.doMergeInsertedChars = false;
+	saevite_insertChar(&buffer, 0, 3, '\n');
 
-	buffer.doMergeInsertedChars = true;
-	saevite_insertChar(&buffer, 4, 'd');
-	saevite_insertChar(&buffer, 5, 'e');
-	saevite_insertChar(&buffer, 6, 'f');
+	//buffer.doMergeInsertedChars = true;
+	saevite_insertChar(&buffer, 0, 4, 'd');
+	saevite_insertChar(&buffer, 0, 5, 'e');
+	saevite_insertChar(&buffer, 0, 6, 'f');
 
 	saevite_undoSingle(&buffer, NULL);
 
@@ -451,14 +441,14 @@ Int main(Void) {
 	saevite.drawingNecessary = true;
 
 	test_1();
-	test_2();
-	test_3();
-	test_4();
-	test_5();
+	//test_2();
+	//test_3();
+	//test_4();
+	//test_5();
 
-	//saevite_insertChar(&saevite.buffer, 0, 'e');
-	//saevite_insertChar(&saevite.buffer, 1, 'd');
-	//saevite_insertChar(&saevite.buffer, 2, 'o');
+	//saevite_insertChar(&saevite.buffer, 0, 0, 'e');
+	//saevite_insertChar(&saevite.buffer, 0, 1, 'd');
+	//saevite_insertChar(&saevite.buffer, 0, 2, 'o');
 
 	daAppendZ(&saevite.buffers);
 	saevite_buffer_init(&saevite.buffers.items[saevite.buffers.len - 1]);

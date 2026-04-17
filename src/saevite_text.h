@@ -16,14 +16,10 @@ struct saevite_Action {
 struct saevite_Cursor {
 	Int position;
 	Uint clipboardRegisterIndex; /* reserved */
-};
 
-typedef enum saevite_BufferMode {
-	saevite_BufferMode_None,
-	saevite_BufferMode_InsertingChars,
-	saevite_BufferMode_BackDeletingChars,
-	saevite_BufferMode_FrontDeletingChars,
-} saevite_BufferMode;
+	Uint lastPosition;
+	Uint lastCharAllPiecesIndex;
+};
 
 struct saevite_Buffer {
 	DynamicArray(saevite_Cursor) cursors;
@@ -31,12 +27,6 @@ struct saevite_Buffer {
 	DynamicArray(Uint) currentPieces;
 	DynamicArray(saevite_Action) actions;
 	Uint actionsTop;
-
-	saevite_BufferMode mode;
-
-	Uint lastPosition;
-	Uint lastCharAllPiecesIndex;
-	Bool doMergeInsertedChars;
 
 	String8 name;
 };
@@ -56,7 +46,7 @@ Void saevite_redoSingle(saevite_Buffer *buffer, Int *cursorPosition);
 Void saevite_undo(saevite_Buffer *buffer, Int *cursorPosition);
 Void saevite_redo(saevite_Buffer *buffer, Int *cursorPosition);
 Void saevite_insertString(saevite_Buffer *buffer, Uint position, String8 str);
-Void saevite_insertChar(saevite_Buffer *buffer, Uint position, Char c);
+Void saevite_insertChar(saevite_Buffer *buffer, Int cursorIndex, Uint position, Char c);
 Void saevite_deleteSelection(saevite_Buffer *buffer, Uint position, Uint len);
 Int saevite_deleteChar(saevite_Buffer *buffer, Uint position);
 
