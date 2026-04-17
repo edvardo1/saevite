@@ -345,21 +345,23 @@ Void finishTest(String8 test_name, saevite_Buffer *buffer, String8 expectedResul
 Void test_1(Void) {
 	saevite_Buffer buffer = {0};
 
-	saevite_insertString(&buffer, 0, S("foo bar baz"));
-	saevite_insertString(&buffer, 1, S("Hello bro"));
-	saevite_insertString(&buffer, 2, S("mi amigo"));
+	saevite_buffer_init(&buffer);
 
-	saevite_insertChar(&buffer, 2, 'L');
-	saevite_insertChar(&buffer, 3, 'o');
-	saevite_insertChar(&buffer, 4, 'r');
-	saevite_insertChar(&buffer, 5, 'r');
-	saevite_insertChar(&buffer, 6, 'y');
+	saevite_insertString(&buffer, 0, S("foo bar baz"));
+	saevite_insertString(&buffer, 3 + 1 + 3 + 1 + 3, S("Hello bro"));
+	saevite_insertString(&buffer, 3 * 3 + 2 + 5 + 1 + 3, S("mi amigo"));
+
+	saevite_insertChar(&buffer, 0, 2, 'L');
+	saevite_insertChar(&buffer, 0, 3, 'o');
+	saevite_insertChar(&buffer, 0, 4, 'r');
+	saevite_insertChar(&buffer, 0, 5, 'r');
+	saevite_insertChar(&buffer, 0, 6, 'y');
 	saevite_deleteChar(&buffer, 10);
 	saevite_deleteSelection(&buffer, 3, 2);
 	saevite_deleteSelection(&buffer, 22, 1);
 	saevite_insertString(&buffer, 22, S("HERE"));
 
-	finishTest(S("1"), &buffer, S("miLry amgoHello brofooHEREbar baz"));
+	finishTest(S("1"), &buffer, S("foLryo br bazHello broHEREi amigo"));
 }
 
 Void test_2(Void) {
