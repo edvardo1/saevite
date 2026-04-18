@@ -533,12 +533,25 @@ Void saevite_deleteSelection(saevite_Buffer *buffer, Uint position, Uint len) {
 	}
 }
 
-Int saevite_deleteChar(saevite_Buffer *buffer, Uint position) {
+Int saevite_deleteChar(saevite_Buffer *buffer, Int cursorIndex, Uint position) {
 	Uint pieceIndex = 0, len = 0, lastBegin = 0;
 	String8 str = {0};
+	saevite_Cursor *cursor = &buffer->cursors.items[cursorIndex];
+	const saevite_Action *action = &buffer->actions.items[cursor->lastActionIndex];
 
 	if (buffer->currentPieces.len <= 0) {
 		return 1;
+	} else if (
+		cursor->mode == saevite_CursorMode_DeletingChars &&
+		position == cursor->lastPosition - 1 &&
+		(saevite_actionIsInsert(action) || saevite_actionIsReplace(action)) &&
+		action->after == cursor->lastCharAllPiecesIndex &&
+		buffer->allPieces.items[cursor->lastCharAllPiecesIndex].len > 1
+	) {
+		buffer->allPieces.items[cursor->lastCharAllPiecesIndex].len -= 1;
+		cursor->lastPosition = position;
+
+		return 0;
 	} else {
 		saevite__buffer_getPieceInfoFromPosition(buffer, position, &pieceIndex, &len);
 		saevite__buffer_pieceGetString(buffer, pieceIndex, &str);
@@ -546,11 +559,27 @@ Int saevite_deleteChar(saevite_Buffer *buffer, Uint position) {
 	
 		if (lastBegin - str.len > 0 && len > 0) {
 			saevite__buffer_newPieceReplace(buffer, pieceIndex, strSlice(str, lastBegin, str.len - lastBegin));
+
+			cursor->mode = saevite_CursorMode_DeletingChars;
+			cursor->lastPosition = position;
+			cursor->lastActionIndex = buffer->actionsTop - 1;
+			cursor->lastCharAllPiecesIndex = buffer->currentPieces.items[pieceIndex];
+
 			saevite__buffer_newPieceInsert(buffer, pieceIndex, strSlice(str, 0, len));
 		} else if (lastBegin - str.len > 0) {
 			saevite__buffer_newPieceReplace(buffer, pieceIndex, strSlice(str, lastBegin, str.len - lastBegin));
+
+			cursor->mode = saevite_CursorMode_DeletingChars;
+			cursor->lastPosition = position;
+			cursor->lastActionIndex = buffer->actionsTop - 1;
+			cursor->lastCharAllPiecesIndex = buffer->currentPieces.items[pieceIndex];
 		} else if (len > 0) {
 			saevite__buffer_newPieceReplace(buffer, pieceIndex, strSlice(str, 0, len));
+
+			cursor->mode = saevite_CursorMode_DeletingChars;
+			cursor->lastPosition = position;
+			cursor->lastActionIndex = buffer->actionsTop - 1;
+			cursor->lastCharAllPiecesIndex = buffer->currentPieces.items[pieceIndex];
 		} else {
 			saevite__buffer_pieceRemove(buffer, pieceIndex);
 		}

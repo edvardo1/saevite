@@ -134,7 +134,7 @@ Void saevite_update(saevite_Ste *saevite) {
 			saevite_printBuffer(buffer);
 			printf("cursor: %d\n", *cursor);
 		} else if (key == 8) {
-			saevite_deleteChar(buffer, *cursor - 1);
+			saevite_deleteChar(buffer, 0, *cursor - 1);
 			*cursor -= 1;
 			if (*cursor < 0) {*cursor = 0;}
 			saevite->drawingNecessary = true;
@@ -346,7 +346,7 @@ Void test_1(Void) {
 	saevite_insertChar(&buffer, 0, 4, 'r');
 	saevite_insertChar(&buffer, 0, 5, 'r');
 	saevite_insertChar(&buffer, 0, 6, 'y');
-	saevite_deleteChar(&buffer, 10);
+	saevite_deleteChar(&buffer, 0, 10);
 	saevite_deleteSelection(&buffer, 3, 2);
 	saevite_deleteSelection(&buffer, 22, 1);
 	saevite_insertString(&buffer, 22, S("HERE"));
@@ -363,7 +363,7 @@ Void test_2(Void) {
 	saevite_insertChar(&buffer, 0, 0, 'e');
 	saevite_insertChar(&buffer, 0, 1, 'd');
 	saevite_insertChar(&buffer, 0, 2, 'o');
-	saevite_deleteChar(&buffer, 1);
+	saevite_deleteChar(&buffer, 0, 1);
 
 	saevite_stringFromBuffer(&buffer, &result);
 	finishTest(S("2"), &buffer, S("eo"));
@@ -378,11 +378,11 @@ Void test_3(Void) {
 	saevite_insertChar(&buffer, 0, 0, 'e');
 	saevite_insertChar(&buffer, 0, 1, 'd');
 	saevite_insertChar(&buffer, 0, 2, 'o');
-	assert(saevite_deleteChar(&buffer, 0) == 0);
-	assert(saevite_deleteChar(&buffer, 0) == 0);
-	assert(saevite_deleteChar(&buffer, 0) == 0);
-	assert(saevite_deleteChar(&buffer, 0) != 0);
-	assert(saevite_deleteChar(&buffer, 0) != 0);
+	assert(saevite_deleteChar(&buffer, 0, 0) == 0);
+	assert(saevite_deleteChar(&buffer, 0, 0) == 0);
+	assert(saevite_deleteChar(&buffer, 0, 0) == 0);
+	assert(saevite_deleteChar(&buffer, 0, 0) != 0);
+	assert(saevite_deleteChar(&buffer, 0, 0) != 0);
 
 	saevite_stringFromBuffer(&buffer, &result);
 	finishTest(S("3"), &buffer, S(""));
@@ -400,8 +400,8 @@ Void test_4(Void) {
 	saevite_insertChar(&buffer, 0, 3, 'd');
 	saevite_insertChar(&buffer, 0, 4, 'e');
 	saevite_insertChar(&buffer, 0, 5, 'f');
-	assert(saevite_deleteChar(&buffer, 5) == 0);
-	assert(saevite_deleteChar(&buffer, 4) == 0);
+	assert(saevite_deleteChar(&buffer, 0, 5) == 0);
+	assert(saevite_deleteChar(&buffer, 0, 4) == 0);
 	saevite_insertChar(&buffer, 0, 4, 'E');
 	saevite_insertChar(&buffer, 0, 5, 'F');
 

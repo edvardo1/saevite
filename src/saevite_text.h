@@ -56,7 +56,7 @@ Void saevite_redo(saevite_Buffer *buffer, Int *cursorPosition);
 Void saevite_insertString(saevite_Buffer *buffer, Uint position, String8 str);
 Void saevite_insertChar(saevite_Buffer *buffer, Int cursorIndex, Uint position, Char c);
 Void saevite_deleteSelection(saevite_Buffer *buffer, Uint position, Uint len);
-Int saevite_deleteChar(saevite_Buffer *buffer, Uint position);
+Int saevite_deleteChar(saevite_Buffer *buffer, Int cursorIndex, Uint position);
 
 saevite_Action saevite__action(Uint currentPiecesIndex, Uint allPiecesBeforeIndex, Uint allPiecesAfterIndex);
 saevite_Action saevite_makeUndoMarkerAction(Void);
