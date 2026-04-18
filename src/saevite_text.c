@@ -433,6 +433,11 @@ Void saevite_insertString(saevite_Buffer *buffer, Uint position, String8 str) {
 }
 
 Void saevite_insertChar(saevite_Buffer *buffer, Int cursorIndex, Uint position, Char c) {
+	/*
+	 * @todo
+	 * refactor this function, there is a lot of duplicated code
+	 * here for dealing with the piece optimizations
+	 */
 	String8 oldStr = {0};
 	String8 str = {0};
 	Uint pieceIndex = 0, len = 0;
@@ -534,6 +539,11 @@ Void saevite_deleteSelection(saevite_Buffer *buffer, Uint position, Uint len) {
 }
 
 Int saevite_deleteChar(saevite_Buffer *buffer, Int cursorIndex, Uint position) {
+	/*
+	 * @todo
+	 * refactor this function, there is a lot of duplicated code
+	 * here for dealing with the piece optimizations
+	 */
 	Uint pieceIndex = 0, len = 0, lastBegin = 0;
 	String8 str = {0};
 	saevite_Cursor *cursor = &buffer->cursors.items[cursorIndex];

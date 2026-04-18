@@ -30,6 +30,31 @@ struct saevite_Cursor {
 };
 
 struct saevite_Buffer {
+	/*
+	 * @todo
+	 * store all of the string contents in here
+	 * currently, the strings are malloc'ed randomly by the functions that
+	 * deal with the buffer, that shouldn't happen
+	 *
+	 * we could have a buffer for all the bytes and have a freelist
+	 * in case some parts end up not being used due to the undo feature
+	 */
+	/*
+	 * @todo
+	 * rename allPieces and currentPieces, as they have confusing names
+	 *
+	 * allPieces is the array where all the pieces actually are
+	 * currentPieces is an array of indices into allPieces
+	 *
+	 * maybe rename them to pieces and pieceIndices?
+	 */
+	/*
+	 * @todo?
+	 * make allPieces a DynamicArray(Piece) instead of DynamicArray(String8)
+	 *
+	 * String8 was fine for a while but storing an extra boolean for whether
+	 * the string is a string slice or if it is actually an allocateed string
+	 */
 	DynamicArray(saevite_Cursor) cursors;
 	DynamicArray(String8) allPieces;
 	DynamicArray(Uint) currentPieces;
