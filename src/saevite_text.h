@@ -111,10 +111,10 @@ Void saevite_buffer_getCursorPosition(const saevite_Buffer *buffer, Uint index, 
 Void saevite_buffer_setCursorPosition(saevite_Buffer *buffer, Uint index, Uint position);
 
 Void saevite_pieceNew(saevite_Buffer *buffer, String8 str, Uint *index);
-Void saevite_undoSingle(saevite_Buffer *buffer, Int *cursorPosition);
-Void saevite_redoSingle(saevite_Buffer *buffer, Int *cursorPosition);
-Void saevite_undo(saevite_Buffer *buffer, Int *cursorPosition);
-Void saevite_redo(saevite_Buffer *buffer, Int *cursorPosition);
+Void saevite_undoSingle(saevite_Buffer *buffer);
+Void saevite_redoSingle(saevite_Buffer *buffer);
+Void saevite_undo(saevite_Buffer *buffer);
+Void saevite_redo(saevite_Buffer *buffer);
 Void saevite_insertString(saevite_Buffer *buffer, Uint position, String8 str);
 Void saevite_insertChar(saevite_Buffer *buffer, Int cursorIndex, Uint position, Char c);
 Void saevite_deleteSelection(saevite_Buffer *buffer, Uint position, Uint len);

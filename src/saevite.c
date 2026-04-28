@@ -122,13 +122,13 @@ Void saevite_update(saevite_Ste *saevite) {
 		if (key == '\r') {key = '\n';}
 
 		if (!!(keyMod & gooey_KEYMOD_LCTRL) && key == 'z') {
-			saevite_undo(buffer, cursor);
+			saevite_undo(buffer);
 			saevite->drawingNecessary = true;
 
 			saevite_printBuffer(buffer);
 			printf("cursor: %d\n", *cursor);
 		} else if (!!(keyMod & gooey_KEYMOD_LCTRL) && key == 'y') {
-			saevite_redo(buffer, cursor);
+			saevite_redo(buffer);
 			saevite->drawingNecessary = true;
 
 			saevite_printBuffer(buffer);
@@ -427,7 +427,7 @@ Void test_5(Void) {
 	saevite_insertChar(&buffer, 0, 5, 'e');
 	saevite_insertChar(&buffer, 0, 6, 'f');
 
-	saevite_undo(&buffer, NULL);
+	saevite_undo(&buffer);
 
 	saevite_stringFromBuffer(&buffer, &result);
 	finishTest(S("5"), &buffer, S("abc\n"));
