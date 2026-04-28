@@ -37,7 +37,7 @@ typedef struct {
 
 	gooey_Texture renderTarget;
 	Bool drawingNecessary;
-} saevite_Ste;
+} saevite_Saevite;
 
 Void toGlyphs(String8 str, npfont_Glyph **glyphs, U32 *len) {
 	*glyphs = malloc(sizeof(npfont_Glyph) * str.len);
@@ -57,7 +57,7 @@ Void toGlyphs(String8 str, npfont_Glyph **glyphs, U32 *len) {
 	}
 }
 
-Void saevite_openWindow(saevite_Ste *saevite) {
+Void saevite_openWindow(saevite_Saevite *saevite) {
 	Allocator npfontAllocator = {malloc, free};
 	gooey_Cfg cfg = {0};
 	U32 fontIndex = 0;
@@ -97,13 +97,13 @@ Void saevite_openWindow(saevite_Ste *saevite) {
 	gooey_makeTargetableTexture(saevite->gctx, &saevite->renderTarget, 800, 600);
 }
 
-Bool saevite_windowShouldClose(saevite_Ste *saevite) {
+Bool saevite_windowShouldClose(saevite_Saevite *saevite) {
 	return gooey_windowShouldClose(saevite->gctx);
 }
 
 void breakfun(void) {}
 
-Void saevite_update(saevite_Ste *saevite) {
+Void saevite_update(saevite_Saevite *saevite) {
 	saevite_Window *window = &saevite->windows.items[0];
 	saevite_Buffer *buffer = &saevite->buffers.items[window->bufferIndex];
 	gooey_Event gev = {0};
@@ -183,7 +183,7 @@ Void saevite_update(saevite_Ste *saevite) {
 	}
 }
 
-Void drawCursor(saevite_Ste *saevite, I32 xPos, I32 yPos, I32 ascent, I32 descent) {
+Void drawCursor(saevite_Saevite *saevite, I32 xPos, I32 yPos, I32 ascent, I32 descent) {
 	Rect_I32 cursorRect = rect_I32(
 		xPos,
 		yPos - ascent,
@@ -195,7 +195,7 @@ Void drawCursor(saevite_Ste *saevite, I32 xPos, I32 yPos, I32 ascent, I32 descen
 	gooey_fillRect(saevite->gctx, cursorRect);
 }
 
-Void saevite_renderBuffer(saevite_Ste *saevite, saevite_Buffer *buffer) {
+Void saevite_renderBuffer(saevite_Saevite *saevite, saevite_Buffer *buffer) {
 	I32 xPos = 100, yPos = 100, yDiff = 0;
 	npfont_GlyphInfo gi = {0};
 	npunicode_Utf8Decoder decoder = {0};
@@ -288,7 +288,7 @@ Void saevite_renderBuffer(saevite_Ste *saevite, saevite_Buffer *buffer) {
 	}
 }
 
-Void saevite_render(saevite_Ste *saevite) {
+Void saevite_render(saevite_Saevite *saevite) {
 	U64 b = gooey_getNs(saevite->gctx);
 	saevite_Window *window = &saevite->windows.items[0];
 	saevite_Buffer *buffer = &saevite->buffers.items[window->bufferIndex];
@@ -316,7 +316,7 @@ Void saevite_render(saevite_Ste *saevite) {
 	//printf("%ldus\n", (e - b) / 1000);
 }
 
-Void saevite_closeWindow(saevite_Ste *saevite) {
+Void saevite_closeWindow(saevite_Saevite *saevite) {
 	gooey_exit(saevite->gctx);
 }
 
@@ -435,7 +435,7 @@ Void test_5(Void) {
 
 Int main(Void) {
 	gooey_Ctx gctx = {0};
-	saevite_Ste saevite = {0};
+	saevite_Saevite saevite = {0};
 	saevite.gctx = &gctx;
 	saevite.drawingNecessary = true;
 

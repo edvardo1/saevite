@@ -1,5 +1,5 @@
-#if !defined(STE_TEXT_H)
-#define STE_TEXT_H
+#if !defined(SAEVITE_TEXT_H)
+#define SAEVITE_TEXT_H
 
 #include "acyacsl.h"
 
@@ -127,4 +127,4 @@ saevite_Action saevite_action_remove(U32 index, U32 before);
 saevite_Action saevite_action_undoMarker(Void);
 saevite_Action saevite_action_moveCursor(U32 index, U32 previousPosition, U32 nextPosition);
 
-#endif /* !defined(STE_TEXT_H) */
+#endif /* !defined(SAEVITE_TEXT_H) */
