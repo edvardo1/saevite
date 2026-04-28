@@ -7,10 +7,47 @@ typedef struct saevite_Buffer saevite_Buffer;
 typedef struct saevite_Action saevite_Action;
 typedef struct saevite_Cursor saevite_Cursor;
 
+typedef enum {
+	saevite_ActionKind_Replace,
+	saevite_ActionKind_Insert,
+	saevite_ActionKind_Remove,
+	saevite_ActionKind_MoveCursor,
+	saevite_ActionKind_AddCursor,
+	saevite_ActionKind_RemoveCursor,
+	saevite_ActionKind_UndoMarker,
+	saevite_ActionKind_COUNT
+} saevite_ActionKind;
+
 struct saevite_Action {
-	Uint currentPiecesIndex;
-	Uint before;
-	Uint after;
+	U32 kind;
+	union {
+		struct {
+			U32 index;
+			U32 before;
+			U32 after;
+		} replace;
+		struct {
+			U32 index;
+			U32 after;
+		} insert;
+		struct {
+			U32 index;
+			U32 before;
+		} remove;
+		struct {
+			U32 index;
+			U32 previousPosition;
+			U32 nextPosition;
+		} moveCursor;
+		struct {
+			U32 index;
+			U32 position;
+		} addCursor;
+		struct {
+			U32 index;
+			U32 position;
+		} removeCursor;
+	} data;
 };
 
 typedef enum {
@@ -82,16 +119,12 @@ Void saevite_insertString(saevite_Buffer *buffer, Uint position, String8 str);
 Void saevite_insertChar(saevite_Buffer *buffer, Int cursorIndex, Uint position, Char c);
 Void saevite_deleteSelection(saevite_Buffer *buffer, Uint position, Uint len);
 Int saevite_deleteChar(saevite_Buffer *buffer, Int cursorIndex, Uint position);
-
-saevite_Action saevite__action(Uint currentPiecesIndex, Uint allPiecesBeforeIndex, Uint allPiecesAfterIndex);
-saevite_Action saevite_makeUndoMarkerAction(Void);
-saevite_Action saevite_makeReplaceAction(Uint currentPiecesIndex, Uint allPiecesBeforeIndex, Uint allPiecesAfterIndex);
-saevite_Action saevite_makeInsertAction(Uint currentPiecesIndex, Uint allPiecesAfterIndex);
-saevite_Action saevite_makeRemoveAction(Uint currentPiecesIndex, Uint allPiecesBeforeIndex);
-Bool saevite_actionIsUndoMarker(const saevite_Action *action);
-Bool saevite_actionIsReplace(const saevite_Action *action);
-Bool saevite_actionIsInsert(const saevite_Action *action);
-Bool saevite_actionIsRemove(const saevite_Action *action);
 Void saevite_buffer_addUndoMarkerIfNecessary(saevite_Buffer *buffer);
+
+saevite_Action saevite_action_replace(U32 index, U32 before, U32 after);
+saevite_Action saevite_action_insert(U32 index, U32 after);
+saevite_Action saevite_action_remove(U32 index, U32 before);
+saevite_Action saevite_action_undoMarker(Void);
+saevite_Action saevite_action_moveCursor(U32 index, U32 previousPosition, U32 nextPosition);
 
 #endif /* !defined(STE_TEXT_H) */
