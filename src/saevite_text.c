@@ -272,6 +272,22 @@ void saevite__doAction(saevite_Buffer *buffer, const saevite_Action *action) {
 		);
 		buffer->currentPieces.len -= 1;
 		break;
+	case saevite_ActionKind_MoveCursor:
+		assert(action->data.moveCursor.index < buffer->cursors.len);
+		if (
+			buffer->cursors.items[action->data.moveCursor.index].position !=
+			action->data.moveCursor.previousPosition
+		) {
+			printf(
+				"%d != %d\n",
+				buffer->cursors.items[action->data.moveCursor.index].position,
+				action->data.moveCursor.previousPosition
+			);
+			abort();
+		}
+		buffer->cursors.items[action->data.moveCursor.index].position =
+			action->data.moveCursor.nextPosition;
+		break;
 	default:
 		assert(0);
 	}
