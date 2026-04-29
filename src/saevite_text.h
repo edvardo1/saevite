@@ -110,15 +110,15 @@ Int saevite_buffer_getCursorAmount(const saevite_Buffer *buffer);
 Void saevite_buffer_getCursorPosition(const saevite_Buffer *buffer, Uint index, Uint *position);
 Void saevite_buffer_setCursorPosition(saevite_Buffer *buffer, Uint index, Uint position);
 
-Void saevite_pieceNew(saevite_Buffer *buffer, String8 str, Uint *index);
-Void saevite_undoSingle(saevite_Buffer *buffer);
-Void saevite_redoSingle(saevite_Buffer *buffer);
-Void saevite_undo(saevite_Buffer *buffer);
-Void saevite_redo(saevite_Buffer *buffer);
-Void saevite_insertString(saevite_Buffer *buffer, Uint position, String8 str);
-Void saevite_insertChar(saevite_Buffer *buffer, Int cursorIndex, Uint position, Char c);
-Void saevite_deleteSelection(saevite_Buffer *buffer, Uint position, Uint len);
-Int saevite_deleteChar(saevite_Buffer *buffer, Int cursorIndex, Uint position);
+Void saevite_buffer_pieceNew(saevite_Buffer *buffer, String8 str, Uint *index);
+Void saevite_buffer_undoSingle(saevite_Buffer *buffer);
+Void saevite_buffer_redoSingle(saevite_Buffer *buffer);
+Void saevite_buffer_undo(saevite_Buffer *buffer);
+Void saevite_buffer_redo(saevite_Buffer *buffer);
+Void saevite_buffer_insertString(saevite_Buffer *buffer, Uint position, String8 str);
+Void saevite_buffer_insertChar(saevite_Buffer *buffer, Int cursorIndex, Uint position, Char c);
+Void saevite_buffer_deleteSelection(saevite_Buffer *buffer, Uint position, Uint len);
+Int  saevite_buffer_deleteChar(saevite_Buffer *buffer, Int cursorIndex, Uint position);
 Void saevite_buffer_addUndoMarkerIfNecessary(saevite_Buffer *buffer);
 
 saevite_Action saevite_action_replace(U32 index, U32 before, U32 after);

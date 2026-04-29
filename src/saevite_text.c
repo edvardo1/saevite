@@ -192,7 +192,7 @@ Int saevite__buffer_getPieceInfoFromPosition(const saevite_Buffer *buffer, Uint 
 	return 1;
 }
 
-Void saevite_pieceNew(saevite_Buffer *buffer, String8 str, Uint *index) {
+Void saevite_buffer_pieceNew(saevite_Buffer *buffer, String8 str, Uint *index) {
 	daAppend(&buffer->allPieces, str);
 	if (index != NULL) {
 		*index = buffer->allPieces.len - 1;
@@ -275,7 +275,7 @@ void saevite__actionReverse(saevite_Action *dst, const saevite_Action *src) {
 	}
 }
 
-Void saevite_undoSingle(saevite_Buffer *buffer) {
+Void saevite_buffer_undoSingle(saevite_Buffer *buffer) {
 	const saevite_Action *action = NULL;
 	saevite_Action reversedAction = {0};
 
@@ -288,7 +288,7 @@ Void saevite_undoSingle(saevite_Buffer *buffer) {
 	}
 }
 
-Void saevite_redoSingle(saevite_Buffer *buffer) {
+Void saevite_buffer_redoSingle(saevite_Buffer *buffer) {
 	saevite_Action *action = NULL;
 
 	if (buffer->actionsTop < buffer->actions.len) {
@@ -299,7 +299,7 @@ Void saevite_redoSingle(saevite_Buffer *buffer) {
 	}
 }
 
-Void saevite_undo(saevite_Buffer *buffer) {
+Void saevite_buffer_undo(saevite_Buffer *buffer) {
 	if (
 		buffer->actionsTop > 0 &&
 		saevite_action_isUndoMarker(&buffer->actions.items[buffer->actionsTop - 1])
@@ -311,11 +311,11 @@ Void saevite_undo(saevite_Buffer *buffer) {
 		buffer->actionsTop > 0 &&
 		!saevite_action_isUndoMarker(&buffer->actions.items[buffer->actionsTop - 1])
 	) {
-		saevite_undoSingle(buffer);
+		saevite_buffer_undoSingle(buffer);
 	}
 }
 
-Void saevite_redo(saevite_Buffer *buffer) {
+Void saevite_buffer_redo(saevite_Buffer *buffer) {
 	if (buffer->actionsTop == buffer->actions.len) {
 		return;
 	}
@@ -328,7 +328,7 @@ Void saevite_redo(saevite_Buffer *buffer) {
 		buffer->actionsTop < buffer->actions.len &&
 		!saevite_action_isUndoMarker(&buffer->actions.items[buffer->actionsTop])
 	) {
-		saevite_redoSingle(buffer);
+		saevite_buffer_redoSingle(buffer);
 	}
 }
 
@@ -385,17 +385,17 @@ Void saevite__buffer_pieceRemove(saevite_Buffer *buffer, Uint currentPiecesPosit
 
 Void saevite__buffer_newPieceInsert(saevite_Buffer *buffer, Uint currentPiecesPosition, String8 string) {
 	Uint pieceIndex = 0;
-	saevite_pieceNew(buffer, string, &pieceIndex);
+	saevite_buffer_pieceNew(buffer, string, &pieceIndex);
 	saevite__buffer_pieceInsert(buffer, currentPiecesPosition, pieceIndex);
 }
 
 Void saevite__buffer_newPieceReplace(saevite_Buffer *buffer, Uint currentPiecesPosition, String8 string) {
 	Uint pieceIndex = 0;
-	saevite_pieceNew(buffer, string, &pieceIndex);
+	saevite_buffer_pieceNew(buffer, string, &pieceIndex);
 	saevite__buffer_pieceReplace(buffer, currentPiecesPosition, pieceIndex);
 }
 
-Void saevite_insertString(saevite_Buffer *buffer, Uint position, String8 str) {
+Void saevite_buffer_insertString(saevite_Buffer *buffer, Uint position, String8 str) {
 	String8 oldStr = {0};
 	Uint pieceIndex = 0, len = 0;
 	Int err = 0;
@@ -424,7 +424,7 @@ Void saevite_insertString(saevite_Buffer *buffer, Uint position, String8 str) {
 	}
 }
 
-Void saevite_insertChar(saevite_Buffer *buffer, Int cursorIndex, Uint position, Char c) {
+Void saevite_buffer_insertChar(saevite_Buffer *buffer, Int cursorIndex, Uint position, Char c) {
 	/*
 	 * @todo
 	 * refactor this function, there is a lot of duplicated code
@@ -461,7 +461,7 @@ Void saevite_insertChar(saevite_Buffer *buffer, Int cursorIndex, Uint position, 
 		assert(str.buf != NULL);
 		str.buf[0] = c;
 		str.len = 1;
-		saevite_pieceNew(buffer, str, &cpIndex);
+		saevite_buffer_pieceNew(buffer, str, &cpIndex);
 
 		cursor->mode = saevite_CursorMode_InsertingChars;
 		cursor->lastPosition = position;
@@ -501,7 +501,7 @@ Void saevite_insertChar(saevite_Buffer *buffer, Int cursorIndex, Uint position, 
 	}
 }
 
-Void saevite_deleteSelection(saevite_Buffer *buffer, Uint position, Uint len) {
+Void saevite_buffer_deleteSelection(saevite_Buffer *buffer, Uint position, Uint len) {
 	/* @todo @optimize
 	 * saevite__buffer_getPieceInfoFromPosition does the same work twice
 	 */
@@ -532,7 +532,7 @@ Void saevite_deleteSelection(saevite_Buffer *buffer, Uint position, Uint len) {
 	}
 }
 
-Int saevite_deleteChar(saevite_Buffer *buffer, Int cursorIndex, Uint position) {
+Int saevite_buffer_deleteChar(saevite_Buffer *buffer, Int cursorIndex, Uint position) {
 	/*
 	 * @todo
 	 * refactor this function, there is a lot of duplicated code
