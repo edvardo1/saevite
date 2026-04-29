@@ -671,13 +671,14 @@ Void saevite_buffer_addUndoMarkerIfNecessary(saevite_Buffer *buffer) {
 	}
 }
 
-Void saevite_buffer_cursorMoveRelative(saevite_Buffer *buffer, Uint index, Uint offset) {
+Void saevite_buffer_cursorMoveRelative(saevite_Buffer *buffer, Uint index, Int offset) {
 	U32 lastPosition = buffer->cursors.items[index].position;
 	U32 newPosition = buffer->cursors.items[index].position + offset;
 	daAppend(
 		&buffer->actions,
 		saevite_action_moveCursor(index, lastPosition, newPosition)
 	);
+	buffer->actionsTop = buffer->actions.len;
 	saevite__doAction(buffer, &buffer->actions.items[buffer->actions.len - 1]);
 }
 
@@ -693,6 +694,7 @@ Void saevite_buffer_cursorMoveAbsolute(saevite_Buffer *buffer, Uint index, Uint 
 		&buffer->actions,
 		saevite_action_moveCursor(index, lastPosition, newPosition)
 	);
+	buffer->actionsTop = buffer->actions.len;
 	saevite__doAction(buffer, &buffer->actions.items[buffer->actions.len - 1]);
 }
 
