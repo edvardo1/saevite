@@ -110,75 +110,80 @@ Void saevite_update(saevite_Saevite *saevite) {
 	U64 key = 0;
 	U32 keyMod = 0;
 	Bool isDown = false;
-	Int *cursor = NULL;
-
-	assert(buffer->cursors.len > 0);
-	cursor = &buffer->cursors.items[buffer->cursors.len - 1].position;
+	const Int cursorPosition = 0;
+	Int cursorIndex = 0;
 
 	gooey_waitEvent(saevite->gctx, &gev);
 
 	if (gooey_event_key_get(saevite->gctx, &gev, &key, &keyMod, &isDown) == 0 && isDown) {
-		printf("key = %ld, keymod = %x\n", key, keyMod);
-		if (key == '\r') {key = '\n';}
+		for (
+			cursorIndex = 0;
+			cursorIndex < saevite_buffer_getCursorAmount(buffer);
+			cursorIndex += 1
+		) {
+			saevite_buffer_getCursorPosition(buffer, cursorIndex, (Int *)&cursorPosition);
+			if (key == '\r') {key = '\n';}
 
-		if (!!(keyMod & gooey_KEYMOD_LCTRL) && key == 'z') {
-			saevite_buffer_undo(buffer);
-			saevite->drawingNecessary = true;
+			if (!!(keyMod & gooey_KEYMOD_LCTRL) && key == 'z') {
+				saevite_buffer_undo(buffer);
+				saevite->drawingNecessary = true;
 
-			saevite_printBuffer(buffer);
-			printf("cursor: %d\n", *cursor);
-		} else if (!!(keyMod & gooey_KEYMOD_LCTRL) && key == 'y') {
-			saevite_buffer_redo(buffer);
-			saevite->drawingNecessary = true;
+				saevite_printBuffer(buffer);
+			} else if (!!(keyMod & gooey_KEYMOD_LCTRL) && key == 'y') {
+				saevite_buffer_redo(buffer);
+				saevite->drawingNecessary = true;
 
-			saevite_printBuffer(buffer);
-			printf("cursor: %d\n", *cursor);
-		} else if (key == 8) {
-			saevite_buffer_deleteChar(buffer, 0, *cursor - 1);
-			*cursor -= 1;
-			if (*cursor < 0) {*cursor = 0;}
-			saevite->drawingNecessary = true;
+				saevite_printBuffer(buffer);
+			} else if (key == 8) {
+				saevite_buffer_deleteChar(buffer, 0, cursorPosition - 1);
+				saevite_buffer_cursorMoveRelative(buffer, cursorIndex, -1);
+				saevite->drawingNecessary = true;
 
-			saevite_printBuffer(buffer);
-			printf("cursor: %d\n", *cursor);
-		//} else if (key == 'q') {
-		//	gooey_setWindowShouldClose(saevite->gctx, true);
-		} else if (key == SDLK_LEFT) {
-			/* @todo change this from SDL to gooey */
-			saevite_buffer_addUndoMarkerIfNecessary(buffer);
-			*cursor -= 1;
-			if (*cursor < 0) {*cursor = 0;}
-			saevite->drawingNecessary = true;
-		} else if (key == SDLK_RIGHT) {
-			/* @todo change this from SDL to gooey */
-			saevite_buffer_addUndoMarkerIfNecessary(buffer);
-			*cursor += 1;
-			saevite->drawingNecessary = true;
-		} else if (key == '\n' || key == ' ' || key == '\t' || (key >= '!' && key <= '~')) {
-			//if (key == '\n') {
-			//	buffer->doMergeInsertedChars = false;
-			//	buffer->mode = saevite_BufferMode_None;
-			//} else {
-			//	buffer->doMergeInsertedChars = true;
-			//}
-			//buffer->doMergeInsertedChars = true;
-			if (key == '\n') {
+				saevite_printBuffer(buffer);
+				//} else if (key == 'q') {
+				//	gooey_setWindowShouldClose(saevite->gctx, true);
+			} else if (key == SDLK_LEFT) {
+				/* @todo change this from SDL to gooey */
 				saevite_buffer_addUndoMarkerIfNecessary(buffer);
-				saevite_buffer_insertChar(buffer, 0, *cursor, key);
+				saevite_buffer_cursorMoveRelative(buffer, cursorIndex, -1);
+				saevite->drawingNecessary = true;
+				saevite_printBuffer(buffer);
+			} else if (key == SDLK_RIGHT) {
+				/* @todo change this from SDL to gooey */
 				saevite_buffer_addUndoMarkerIfNecessary(buffer);
-			} else {
-				if (key == 'r') {
-					saevite_printBuffer(buffer);
-					breakfun();
+				saevite_buffer_cursorMoveRelative(buffer, cursorIndex, 1);
+				saevite->drawingNecessary = true;
+				saevite_printBuffer(buffer);
+			} else if (
+				key == '\n' ||
+				key == ' ' ||
+				key == '\t' ||
+				(key >= '!' && key <= '~')
+			) {
+				//if (key == '\n') {
+				//	buffer->doMergeInsertedChars = false;
+				//	buffer->mode = saevite_BufferMode_None;
+				//} else {
+				//	buffer->doMergeInsertedChars = true;
+				//}
+				//buffer->doMergeInsertedChars = true;
+				if (key == '\n') {
+					saevite_buffer_addUndoMarkerIfNecessary(buffer);
+					saevite_buffer_insertChar(buffer, 0, cursorPosition, key);
+					saevite_buffer_addUndoMarkerIfNecessary(buffer);
+				} else {
+					if (key == 'r') {
+						saevite_printBuffer(buffer);
+						breakfun();
+					}
+					saevite_buffer_insertChar(buffer, 0, cursorPosition, key);
 				}
-				saevite_buffer_insertChar(buffer, 0, *cursor, key);
+
+				saevite_buffer_cursorMoveRelative(buffer, cursorIndex, 1);
+				saevite->drawingNecessary = true;
+
+				saevite_printBuffer(buffer);
 			}
-
-			*cursor += 1;
-			saevite->drawingNecessary = true;
-
-			saevite_printBuffer(buffer);
-			printf("cursor: %d\n", *cursor);
 		}
 	}
 }
