@@ -128,6 +128,24 @@ Void saevite_printBuffer(const saevite_Buffer *buffer) {
 			break;
 		}
 	}
+
+	printf("total len: %d\n", buffer->len);
+	for (i = 0; i < buffer->cursors.len; i += 1) {
+		printf("cursor[%ld]:\n", i);
+		printf("  ");
+		printf("position: %d\n", buffer->cursors.items[i].position);
+		printf("  ");
+		printf("clipboardRegisterIndex: %d\n", buffer->cursors.items[i].clipboardRegisterIndex);
+		printf("  ");
+		printf("mode: %d\n", buffer->cursors.items[i].mode);
+		printf("  ");
+		printf("lastPosition: %d\n", buffer->cursors.items[i].lastPosition);
+		printf("  ");
+		printf("lastCharAllPiecesIndex: %d\n", buffer->cursors.items[i].lastCharAllPiecesIndex);
+		printf("  ");
+		printf("lastActionIndex: %d\n", buffer->cursors.items[i].lastActionIndex);
+	}
+
 	printf("\n");
 	printf("\n");
 }
