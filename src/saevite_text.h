@@ -96,6 +96,7 @@ struct saevite_Buffer {
 	DynamicArray(String8) allPieces;
 	DynamicArray(Uint) currentPieces;
 	DynamicArray(saevite_Action) actions;
+	Uint len;
 	Uint actionsTop;
 
 	String8 name;

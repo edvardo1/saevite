@@ -251,6 +251,8 @@ void saevite__doAction(saevite_Buffer *buffer, const saevite_Action *action) {
 		);
 		buffer->currentPieces.items[action->data.replace.index] =
 			action->data.replace.after;
+		buffer->len -= buffer->allPieces.items[action->data.replace.before].len;
+		buffer->len += buffer->allPieces.items[action->data.replace.after].len;
 		break;
 	case saevite_ActionKind_Insert:
 		daAppendZ(&buffer->currentPieces);
@@ -262,6 +264,7 @@ void saevite__doAction(saevite_Buffer *buffer, const saevite_Action *action) {
 		);
 		buffer->currentPieces.items[action->data.insert.index] =
 			action->data.insert.after;
+		buffer->len += buffer->allPieces.items[action->data.insert.after].len;
 		break;
 	case saevite_ActionKind_Remove:
 		memmove(
@@ -271,6 +274,7 @@ void saevite__doAction(saevite_Buffer *buffer, const saevite_Action *action) {
 			sizeof(*buffer->currentPieces.items)
 		);
 		buffer->currentPieces.len -= 1;
+		buffer->len -= buffer->allPieces.items[action->data.remove.before].len;
 		break;
 	case saevite_ActionKind_MoveCursor:
 		assert(action->data.moveCursor.index < buffer->cursors.len);
@@ -515,6 +519,7 @@ Void saevite_buffer_insertChar(saevite_Buffer *buffer, Int cursorIndex, Uint pos
 			buffer->allPieces.items[cursor->lastCharAllPiecesIndex].len - 1
 		] = c;
 		cursor->lastPosition = position;
+		buffer->len += 1;
 	} else {
 		str.buf = malloc(1);
 		assert(str.buf != NULL);
@@ -615,6 +620,7 @@ Int saevite_buffer_deleteChar(saevite_Buffer *buffer, Int cursorIndex, Uint posi
 	) {
 		buffer->allPieces.items[cursor->lastCharAllPiecesIndex].len -= 1;
 		cursor->lastPosition = position;
+		buffer->len -= 1;
 
 		return 0;
 	} else {
