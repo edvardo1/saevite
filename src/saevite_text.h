@@ -57,7 +57,7 @@ typedef enum {
 } saevite_CursorMode;
 
 struct saevite_Cursor {
-	Int position;
+	U32 position;
 	Uint clipboardRegisterIndex; /* reserved */
 
 	saevite_CursorMode mode;
@@ -107,8 +107,8 @@ Void saevite_printBufferContents(const saevite_Buffer *buffer);
 Void saevite_stringFromBuffer(const saevite_Buffer *buffer, String8 *string);
 
 Int saevite_buffer_getCursorAmount(const saevite_Buffer *buffer);
-Void saevite_buffer_getCursorPosition(const saevite_Buffer *buffer, Uint index, Uint *position);
-Void saevite_buffer_setCursorPosition(saevite_Buffer *buffer, Uint index, Uint position);
+Void saevite_buffer_getCursorPosition(const saevite_Buffer *buffer, Uint index, Int *position);
+Void saevite_buffer_setCursorPosition(saevite_Buffer *buffer, Uint index, Int position);
 
 Void saevite_buffer_pieceNew(saevite_Buffer *buffer, String8 str, Uint *index);
 Void saevite_buffer_undoSingle(saevite_Buffer *buffer);
@@ -120,6 +120,9 @@ Void saevite_buffer_insertChar(saevite_Buffer *buffer, Int cursorIndex, Uint pos
 Void saevite_buffer_deleteSelection(saevite_Buffer *buffer, Uint position, Uint len);
 Int  saevite_buffer_deleteChar(saevite_Buffer *buffer, Int cursorIndex, Uint position);
 Void saevite_buffer_addUndoMarkerIfNecessary(saevite_Buffer *buffer);
+
+Void saevite_buffer_cursorMoveRelative(saevite_Buffer *buffer, Uint index, Int offset);
+Void saevite_buffer_cursorMoveAbsolute(saevite_Buffer *buffer, Uint index, Uint position);
 
 saevite_Action saevite_action_replace(U32 index, U32 before, U32 after);
 saevite_Action saevite_action_insert(U32 index, U32 after);
