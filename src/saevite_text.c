@@ -72,7 +72,11 @@ Void saevite_printBuffer(const saevite_Buffer *buffer) {
 	}
 	printf("actions:\n");
 	printf("  actionsTop: %u\n", buffer->actionsTop);
-	for (i = 0; i < buffer->actions.len; i++) {
+	for (
+		i = MAX(0, (Int)buffer->actions.len - 10);
+		i < buffer->actions.len;
+		i += 1
+	) {
 		saevite_Action *action = &buffer->actions.items[i];
 
 		if (i + 1 < buffer->actionsTop) {
