@@ -109,7 +109,13 @@ Void saevite_printBuffer(const saevite_Buffer *buffer) {
 			printf(" in %d\n", action->data.replace.index);
 			break;
 		case saevite_ActionKind_MoveCursor:
-			printf("[%ld] = move cursor: @todo\n", i);
+			printf(
+				"[%ld] = move cursor[%d]: prev: %d, next: %d\n",
+				i,
+				action->data.moveCursor.index,
+				action->data.moveCursor.previousPosition,
+				action->data.moveCursor.nextPosition
+			);
 			break;
 		case saevite_ActionKind_AddCursor:
 			printf("[%ld] = add cursor: @todo\n", i);
