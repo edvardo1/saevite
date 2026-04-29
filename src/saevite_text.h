@@ -109,7 +109,6 @@ Void saevite_stringFromBuffer(const saevite_Buffer *buffer, String8 *string);
 
 Int saevite_buffer_getCursorAmount(const saevite_Buffer *buffer);
 Void saevite_buffer_getCursorPosition(const saevite_Buffer *buffer, Uint index, Int *position);
-Void saevite_buffer_setCursorPosition(saevite_Buffer *buffer, Uint index, Int position);
 
 Void saevite_buffer_pieceNew(saevite_Buffer *buffer, String8 str, Uint *index);
 Void saevite_buffer_undoSingle(saevite_Buffer *buffer);

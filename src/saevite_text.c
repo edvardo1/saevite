@@ -202,11 +202,6 @@ Void saevite_buffer_getCursorPosition(const saevite_Buffer *buffer, Uint index, 
 	*position = buffer->cursors.items[index].position;
 }
 
-Void saevite_buffer_setCursorPosition(saevite_Buffer *buffer, Uint index, Int position) {
-	assert(index < buffer->cursors.len);
-	buffer->cursors.items[index].position = position;
-}
-
 Int saevite__buffer_getPieceInfoFromPosition(const saevite_Buffer *buffer, Uint position, Uint *pieceIndex, Uint *len) {
 	Uint index = 0;
 	String8 str = {0};
