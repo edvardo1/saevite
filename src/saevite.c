@@ -140,8 +140,6 @@ Void saevite_update(saevite_Saevite *saevite) {
 				saevite->drawingNecessary = true;
 
 				saevite_printBuffer(buffer);
-				//} else if (key == 'q') {
-				//	gooey_setWindowShouldClose(saevite->gctx, true);
 			} else if (key == SDLK_LEFT) {
 				/* @todo change this from SDL to gooey */
 				saevite_buffer_addUndoMarkerIfNecessary(buffer);
@@ -160,13 +158,6 @@ Void saevite_update(saevite_Saevite *saevite) {
 				key == '\t' ||
 				(key >= '!' && key <= '~')
 			) {
-				//if (key == '\n') {
-				//	buffer->doMergeInsertedChars = false;
-				//	buffer->mode = saevite_BufferMode_None;
-				//} else {
-				//	buffer->doMergeInsertedChars = true;
-				//}
-				//buffer->doMergeInsertedChars = true;
 				if (key == '\n') {
 					saevite_buffer_addUndoMarkerIfNecessary(buffer);
 					saevite_buffer_insertChar(buffer, 0, cursorPosition, key);
@@ -318,7 +309,6 @@ Void saevite_render(saevite_Saevite *saevite) {
 	U64 e = gooey_getNs(saevite->gctx);
 	UNUSED(b);
 	UNUSED(e);
-	//printf("%ldus\n", (e - b) / 1000);
 }
 
 Void saevite_closeWindow(saevite_Saevite *saevite) {
