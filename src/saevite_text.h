@@ -51,19 +51,22 @@ struct saevite_Action {
 };
 
 typedef enum {
-	saevite_CursorMode_None,
-	saevite_CursorMode_InsertingChars,
-	saevite_CursorMode_DeletingChars,
+	saevite_CursorMode_None           = 0x0,
+	saevite_CursorMode_InsertingChars = 0x1,
+	saevite_CursorMode_DeletingChars  = 0x2,
+	saevite_CursorMode_Moving         = 0x4,
 } saevite_CursorMode;
 
 struct saevite_Cursor {
 	U32 position;
 	Uint clipboardRegisterIndex; /* reserved */
 
-	saevite_CursorMode mode;
+	U32 mode;
 	Uint lastPosition;
 	Uint lastCharAllPiecesIndex;
 	Uint lastActionIndex;
+	Uint lastMoveActionIndex;
+	Uint lastMovePosition;
 };
 
 struct saevite_Buffer {

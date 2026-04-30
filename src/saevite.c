@@ -114,6 +114,7 @@ Void saevite_update(saevite_Saevite *saevite) {
 	U32 keyMod = 0;
 	Bool isDown = false;
 	const Int cursorPosition = 0;
+	static Bool lastWasMove = false;
 	Int cursorIndex = 0;
 
 	gooey_waitEvent(saevite->gctx, &gev);
@@ -135,6 +136,8 @@ Void saevite_update(saevite_Saevite *saevite) {
 				if (saevite->doPrintBuffer) {
 					saevite_printBuffer(buffer, saevite->actionsPrinted);
 				}
+
+				lastWasMove = false;
 			} else if (!!(keyMod & gooey_KEYMOD_LCTRL) && key == 'y') {
 				saevite_buffer_redo(buffer);
 				saevite->drawingNecessary = true;
@@ -142,6 +145,8 @@ Void saevite_update(saevite_Saevite *saevite) {
 				if (saevite->doPrintBuffer) {
 					saevite_printBuffer(buffer, saevite->actionsPrinted);
 				}
+
+				lastWasMove = false;
 			} else if (key == 8) {
 				saevite_buffer_deleteChar(buffer, 0, cursorPosition - 1);
 				saevite_buffer_cursorMoveRelative(buffer, cursorIndex, -1);
@@ -150,24 +155,36 @@ Void saevite_update(saevite_Saevite *saevite) {
 				if (saevite->doPrintBuffer) {
 					saevite_printBuffer(buffer, saevite->actionsPrinted);
 				}
+
+				lastWasMove = false;
 			} else if (key == SDLK_LEFT) {
 				/* @todo change this from SDL to gooey */
-				saevite_buffer_addUndoMarkerIfNecessary(buffer);
+				if (!lastWasMove) {
+					saevite_buffer_addUndoMarkerIfNecessary(buffer);
+				}
+
 				saevite_buffer_cursorMoveRelative(buffer, cursorIndex, -1);
 				saevite->drawingNecessary = true;
 
 				if (saevite->doPrintBuffer) {
 					saevite_printBuffer(buffer, saevite->actionsPrinted);
 				}
+
+				lastWasMove = true;
 			} else if (key == SDLK_RIGHT) {
 				/* @todo change this from SDL to gooey */
-				saevite_buffer_addUndoMarkerIfNecessary(buffer);
+				if (!lastWasMove) {
+					saevite_buffer_addUndoMarkerIfNecessary(buffer);
+				}
+
 				saevite_buffer_cursorMoveRelative(buffer, cursorIndex, 1);
 				saevite->drawingNecessary = true;
 
 				if (saevite->doPrintBuffer) {
 					saevite_printBuffer(buffer, saevite->actionsPrinted);
 				}
+
+				lastWasMove = true;
 			} else if (
 				key == '\n' ||
 				key == ' ' ||
@@ -194,6 +211,8 @@ Void saevite_update(saevite_Saevite *saevite) {
 				if (saevite->doPrintBuffer) {
 					saevite_printBuffer(buffer, saevite->actionsPrinted);
 				}
+
+				lastWasMove = false;
 			}
 		}
 	}
