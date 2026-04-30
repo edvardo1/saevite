@@ -37,6 +37,9 @@ typedef struct {
 
 	gooey_Texture renderTarget;
 	Bool drawingNecessary;
+
+	Bool doPrintBuffer;
+	Int actionsPrinted;
 } saevite_Saevite;
 
 Void toGlyphs(String8 str, npfont_Glyph **glyphs, U32 *len) {
@@ -128,30 +131,42 @@ Void saevite_update(saevite_Saevite *saevite) {
 				saevite_buffer_undo(buffer);
 				saevite->drawingNecessary = true;
 
-				saevite_printBuffer(buffer);
+				if (saevite->doPrintBuffer) {
+					saevite_printBuffer(buffer, saevite->actionsPrinted);
+				}
 			} else if (!!(keyMod & gooey_KEYMOD_LCTRL) && key == 'y') {
 				saevite_buffer_redo(buffer);
 				saevite->drawingNecessary = true;
 
-				saevite_printBuffer(buffer);
+				if (saevite->doPrintBuffer) {
+					saevite_printBuffer(buffer, saevite->actionsPrinted);
+				}
 			} else if (key == 8) {
 				saevite_buffer_deleteChar(buffer, 0, cursorPosition - 1);
 				saevite_buffer_cursorMoveRelative(buffer, cursorIndex, -1);
 				saevite->drawingNecessary = true;
 
-				saevite_printBuffer(buffer);
+				if (saevite->doPrintBuffer) {
+					saevite_printBuffer(buffer, saevite->actionsPrinted);
+				}
 			} else if (key == SDLK_LEFT) {
 				/* @todo change this from SDL to gooey */
 				saevite_buffer_addUndoMarkerIfNecessary(buffer);
 				saevite_buffer_cursorMoveRelative(buffer, cursorIndex, -1);
 				saevite->drawingNecessary = true;
-				saevite_printBuffer(buffer);
+
+				if (saevite->doPrintBuffer) {
+					saevite_printBuffer(buffer, saevite->actionsPrinted);
+				}
 			} else if (key == SDLK_RIGHT) {
 				/* @todo change this from SDL to gooey */
 				saevite_buffer_addUndoMarkerIfNecessary(buffer);
 				saevite_buffer_cursorMoveRelative(buffer, cursorIndex, 1);
 				saevite->drawingNecessary = true;
-				saevite_printBuffer(buffer);
+
+				if (saevite->doPrintBuffer) {
+					saevite_printBuffer(buffer, saevite->actionsPrinted);
+				}
 			} else if (
 				key == '\n' ||
 				key == ' ' ||
@@ -164,7 +179,9 @@ Void saevite_update(saevite_Saevite *saevite) {
 					saevite_buffer_addUndoMarkerIfNecessary(buffer);
 				} else {
 					if (key == 'r') {
-						saevite_printBuffer(buffer);
+						if (saevite->doPrintBuffer) {
+							saevite_printBuffer(buffer, saevite->actionsPrinted);
+						}
 						breakfun();
 					}
 					saevite_buffer_insertChar(buffer, 0, cursorPosition, key);
@@ -173,7 +190,9 @@ Void saevite_update(saevite_Saevite *saevite) {
 				saevite_buffer_cursorMoveRelative(buffer, cursorIndex, 1);
 				saevite->drawingNecessary = true;
 
-				saevite_printBuffer(buffer);
+				if (saevite->doPrintBuffer) {
+					saevite_printBuffer(buffer, saevite->actionsPrinted);
+				}
 			}
 		}
 	}
@@ -438,11 +457,38 @@ Void test_5(Void) {
 	finishTest(S("5"), &buffer, S("abc\n"));
 }
 
-Int main(Void) {
+Void processArgs(Int argc, Char **argv, saevite_Saevite *saevite) {
+	argv++;
+	argc--;
+	saevite->actionsPrinted = -1;
+
+	while (argc != 0) {
+		if (strcmp(argv[0], "+pb") == 0) {
+			saevite->doPrintBuffer = true;
+		} else if (strcmp(argv[0], "-pb") == 0) {
+			saevite->doPrintBuffer = false;
+		}
+
+		if (strcmp(argv[0], "pactions") == 0) {
+			assert(argc > 1);
+			argc--;
+			argv++;
+			saevite->actionsPrinted = atoi(argv[0]);
+		}
+
+		argv++;
+		argc--;
+	}
+}
+
+Int main(Int argc, Char **argv) {
 	gooey_Ctx gctx = {0};
 	saevite_Saevite saevite = {0};
+
 	saevite.gctx = &gctx;
 	saevite.drawingNecessary = true;
+
+	processArgs(argc, argv, &saevite);
 
 	test_1();
 	test_2();

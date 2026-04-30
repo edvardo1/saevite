@@ -103,7 +103,7 @@ struct saevite_Buffer {
 };
 
 Void saevite_buffer_init(saevite_Buffer *buffer);
-Void saevite_printBuffer(const saevite_Buffer *buffer);
+Void saevite_printBuffer(const saevite_Buffer *buffer, Int actionsPrinted);
 Void saevite_printBufferContents(const saevite_Buffer *buffer);
 Void saevite_stringFromBuffer(const saevite_Buffer *buffer, String8 *string);
 

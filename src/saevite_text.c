@@ -56,7 +56,7 @@ Void printPieceString(String8 string) {
 	printf("»");
 }
 
-Void saevite_printBuffer(const saevite_Buffer *buffer) {
+Void saevite_printBuffer(const saevite_Buffer *buffer, Int actionsPrinted) {
 	Usize i = 0;
 	printf("all pieces:\n");
 	for (i = 0; i < buffer->allPieces.len; i++) {
@@ -72,11 +72,15 @@ Void saevite_printBuffer(const saevite_Buffer *buffer) {
 	}
 	printf("actions:\n");
 	printf("  actionsTop: %u\n", buffer->actionsTop);
-	for (
-		i = MAX(0, (Int)buffer->actions.len - 10);
-		i < buffer->actions.len;
-		i += 1
-	) {
+
+	if (actionsPrinted == -1) {
+		i = 0;
+	} else {
+		i = MAX(0, (Int)buffer->actions.len - actionsPrinted);
+	}
+
+	for (; i < buffer->actions.len; i += 1) {
+
 		saevite_Action *action = &buffer->actions.items[i];
 
 		if (i + 1 < buffer->actionsTop) {
