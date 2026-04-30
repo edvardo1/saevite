@@ -386,11 +386,13 @@ Void saevite_buffer_redo(saevite_Buffer *buffer) {
 		buffer->actionsTop += 1;
 	}
 
-	while (
-		buffer->actionsTop < buffer->actions.len &&
-		!saevite_action_isUndoMarker(&buffer->actions.items[buffer->actionsTop])
-	) {
-		saevite_buffer_redoSingle(buffer);
+	while (buffer->actionsTop < buffer->actions.len) {
+		if (saevite_action_isUndoMarker(&buffer->actions.items[buffer->actionsTop])) {
+			buffer->actionsTop += 1;
+			break;
+		} else {
+			saevite_buffer_redoSingle(buffer);
+		}
 	}
 }
 
