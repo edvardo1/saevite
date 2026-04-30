@@ -128,6 +128,7 @@ Void saevite_update(saevite_Saevite *saevite) {
 			if (key == '\r') {key = '\n';}
 
 			if (!!(keyMod & gooey_KEYMOD_LCTRL) && key == 'z') {
+				saevite_buffer_addUndoMarkerIfNecessary(buffer);
 				saevite_buffer_undo(buffer);
 				saevite->drawingNecessary = true;
 
