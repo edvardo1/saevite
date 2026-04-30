@@ -48,9 +48,9 @@ Void toGlyphs(String8 str, npfont_Glyph **glyphs, U32 *len) {
 	U32 codepoint = 0;
 	npfont_Glyph *glyph = NULL;
 
-	npunicode_Utf8Decoder decoder = npunicode_utf8Decoder(str, 0);
+	npunicode_Utf8ArrayDecoder decoder = npunicode_utf8ArrayDecoder(str, 0);
 
-	while (npunicode_utf8Decoder_popCodepoint(&decoder, &codepoint) == 0) {
+	while (npunicode_utf8ArrayDecoder_popCodepoint(&decoder, &codepoint) == 0) {
 		glyph = &(*glyphs)[*len];
 		glyph->codepoints = malloc(sizeof(U32));
 		assert(glyph->codepoints != NULL);
@@ -225,18 +225,48 @@ Bool saevite_buffer_hasCursorInPosition(saevite_Buffer *buffer, Int position) {
 	return false;
 }
 
+typedef struct {
+	saevite_Buffer *buffer;
+	Uint currentPiecesIndex;
+	Uint stringIndex;
+} IteratorData;
+
+npunicode_Utf8IteratorDecoder_FunctionReturn iterator(Void *data) {
+	npunicode_Utf8IteratorDecoder_FunctionReturn result = {0};
+	IteratorData *idata = data;
+	String8 *string = {0};
+
+	for (;;) {
+		if (idata->currentPiecesIndex >= idata->buffer->currentPieces.len) {
+			result.ok = false;
+			return result;
+		}
+		string = &idata->buffer->allPieces.items[
+			idata->buffer->currentPieces.items[idata->currentPiecesIndex]
+		];
+		if (idata->stringIndex < string->len) {
+			result.ok = true;
+			result.byte = string->buf[idata->stringIndex];
+			idata->stringIndex += 1;
+			return result;
+		} else {
+			idata->currentPiecesIndex += 1;
+			idata->stringIndex = 0;
+		}
+	}
+}
+
 Void saevite_renderBuffer(saevite_Saevite *saevite, saevite_Buffer *buffer) {
 	I32 xPos = 100, yPos = 100, yDiff = 0;
 	npfont_GlyphInfo gi = {0};
-	npunicode_Utf8Decoder decoder = {0};
 	U32 codepoint = 0;
-	String8 string = {0};
-	Usize pieceIndex = 0;
 	Bool isTab;
 	I32 defaultAscent = 0, defaultDescent = 0, defaultLineGap = 0;
 	npfont_FontSize defaultFontSize = 0;
 	I32 defaultYDiff = 0;
 	I32 byteCount = 0;
+	IteratorData iteratorData = {0};
+	npunicode_Utf8IteratorDecoder decoder = {0};
 
 	npfont_getAscent(saevite->fctx, -1, &defaultAscent);
 	npfont_getDescent(saevite->fctx, -1, &defaultDescent);
@@ -245,70 +275,69 @@ Void saevite_renderBuffer(saevite_Saevite *saevite, saevite_Buffer *buffer) {
 	defaultAscent  *= defaultFontSize;
 	defaultDescent *= defaultFontSize;
 	defaultLineGap *= defaultFontSize;
-
 	defaultYDiff = defaultAscent - defaultDescent + defaultLineGap;
-	for (Usize cpIndex = 0; cpIndex < buffer->currentPieces.len; cpIndex++) {
-		pieceIndex = buffer->currentPieces.items[cpIndex];
-		string = buffer->allPieces.items[pieceIndex];
-		decoder = npunicode_utf8Decoder(string, 0);
 
-		for (
-			yDiff = defaultYDiff;
-			npunicode_utf8Decoder_popCodepoint(&decoder, &codepoint) == 0;
-			byteCount += 1
-		) {
-			if (codepoint == '\n') {
-				if (saevite_buffer_hasCursorInPosition(buffer, byteCount)) {
-					drawCursor(saevite, xPos, yPos, defaultAscent, defaultDescent);
-				}
-				xPos = 100;
-				yPos += yDiff;
-				yDiff = defaultYDiff;
-				continue;
-			}
+	iteratorData.buffer = buffer;
 
-			isTab = false;
-			if (codepoint == '\t') {
-				codepoint = ' ';
-				isTab = true;
-			}
+	decoder = npunicode_utf8IteratorDecoder(iterator, &iteratorData);
 
-			npfont_getGlyphInfo(saevite->fctx, &codepoint, 1, &gi);
-
-			yDiff = MAX(yDiff, (gi.ascent - gi.descent + gi.lineGap) * gi.fontSize);
-
-			if (gi.textureIndex != npfont_NO_TEXTURE) {
-				gooey_Texture texture = saevite->fctx->textures.items[gi.textureIndex];
-				gooey_renderTextureNoSrc(
-					saevite->gctx,
-					texture,
-					rect_I32(
-						gi.dst.x + xPos,
-						gi.dst.y + yPos,
-						gi.dst.w,
-						gi.dst.h
-					)
-				);
-			}
-
+	for (
+		yDiff = defaultYDiff;
+		npunicode_utf8IteratorDecoder_popCodepoint(&decoder, &codepoint) == 0;
+		byteCount += 1
+	) {
+		if (codepoint == '\n') {
 			if (saevite_buffer_hasCursorInPosition(buffer, byteCount)) {
 				drawCursor(saevite, xPos, yPos, defaultAscent, defaultDescent);
 			}
+			xPos = 100;
+			yPos += yDiff;
+			yDiff = defaultYDiff;
+			continue;
+		}
 
-			if (isTab) {
-				xPos =
-					100 +
-					((xPos - 100) / (I32)(gi.xAdvance * 4)) * (I32)(gi.xAdvance * 4) +
-					(I32)(gi.xAdvance * 4);
-			} else {
-				xPos += gi.xAdvance;
-			}
+		isTab = false;
+		if (codepoint == '\t') {
+			codepoint = ' ';
+			isTab = true;
+		}
+
+		npfont_getGlyphInfo(saevite->fctx, &codepoint, 1, &gi);
+
+		yDiff = MAX(yDiff, (gi.ascent - gi.descent + gi.lineGap) * gi.fontSize);
+
+		if (gi.textureIndex != npfont_NO_TEXTURE) {
+			gooey_Texture texture = saevite->fctx->textures.items[gi.textureIndex];
+			gooey_renderTextureNoSrc(
+				saevite->gctx,
+				texture,
+				rect_I32(
+					gi.dst.x + xPos,
+					gi.dst.y + yPos,
+					gi.dst.w,
+					gi.dst.h
+				)
+			);
 		}
 
 		if (saevite_buffer_hasCursorInPosition(buffer, byteCount)) {
 			drawCursor(saevite, xPos, yPos, defaultAscent, defaultDescent);
 		}
+
+		if (isTab) {
+			xPos =
+				100 +
+				((xPos - 100) / (I32)(gi.xAdvance * 4)) * (I32)(gi.xAdvance * 4) +
+				(I32)(gi.xAdvance * 4);
+		} else {
+			xPos += gi.xAdvance;
+		}
 	}
+
+	if (saevite_buffer_hasCursorInPosition(buffer, byteCount)) {
+		drawCursor(saevite, xPos, yPos, defaultAscent, defaultDescent);
+	}
+
 	if (buffer->currentPieces.len == 0) {
 		drawCursor(saevite, xPos, yPos, defaultAscent, defaultDescent);
 	}
