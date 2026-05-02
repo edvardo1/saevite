@@ -537,6 +537,27 @@ Void test_5(Void) {
 	finishTest(S("5"), &buffer, S("abc\n"));
 }
 
+Void test_6(Void) {
+	saevite_Buffer buffer = {0};
+	String8 result = {0};
+
+	saevite_buffer_init(&buffer);
+
+	saevite_buffer_cursorInsertChar(&buffer, 0, 'a');
+	saevite_buffer_cursorMoveRelative(&buffer, 0, 1);
+	saevite_buffer_cursorInsertChar(&buffer, 0, 's');
+	saevite_buffer_cursorMoveRelative(&buffer, 0, 1);
+	saevite_buffer_cursorInsertChar(&buffer, 0, 'd');
+	saevite_buffer_cursorMoveRelative(&buffer, 0, 1);
+	saevite_buffer_cursorInsertChar(&buffer, 0, 'f');
+	saevite_buffer_cursorMoveRelative(&buffer, 0, 1);
+	saevite_buffer_cursorMoveRelative(&buffer, 0, -1);
+	saevite_buffer_cursorDeleteChar(&buffer, 0);
+
+	saevite_stringFromBuffer(&buffer, &result);
+	finishTest(S("6"), &buffer, S("asd"));
+}
+
 Void processArgs(Int argc, Char **argv, saevite_Saevite *saevite) {
 	argv++;
 	argc--;
@@ -575,6 +596,7 @@ Int main(Int argc, Char **argv) {
 	test_3();
 	test_4();
 	test_5();
+	test_6();
 
 	daAppendZ(&saevite.buffers);
 	saevite_buffer_init(&saevite.buffers.items[saevite.buffers.len - 1]);
