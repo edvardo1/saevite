@@ -113,7 +113,6 @@ Void saevite_update(saevite_Saevite *saevite) {
 	U64 key = 0;
 	U32 keyMod = 0;
 	Bool isDown = false;
-	const Int cursorPosition = 0;
 	static Bool lastWasMove = false;
 	Int cursorIndex = 0;
 
@@ -125,7 +124,6 @@ Void saevite_update(saevite_Saevite *saevite) {
 			cursorIndex < saevite_buffer_getCursorAmount(buffer);
 			cursorIndex += 1
 		) {
-			saevite_buffer_getCursorPosition(buffer, cursorIndex, (Int *)&cursorPosition);
 			if (key == '\r') {key = '\n';}
 
 			if (!!(keyMod & gooey_KEYMOD_LCTRL) && key == 'z') {
@@ -148,8 +146,8 @@ Void saevite_update(saevite_Saevite *saevite) {
 
 				lastWasMove = false;
 			} else if (key == 8) {
-				saevite_buffer_deleteChar(buffer, 0, cursorPosition - 1);
 				saevite_buffer_cursorMoveRelative(buffer, cursorIndex, -1);
+				saevite_buffer_cursorDeleteChar(buffer, 0);
 				saevite->drawingNecessary = true;
 
 				if (saevite->doPrintBuffer) {
@@ -193,7 +191,7 @@ Void saevite_update(saevite_Saevite *saevite) {
 			) {
 				if (key == '\n') {
 					saevite_buffer_addUndoMarkerIfNecessary(buffer);
-					saevite_buffer_insertChar(buffer, 0, cursorPosition, key);
+					saevite_buffer_cursorInsertChar(buffer, cursorIndex, key);
 					saevite_buffer_addUndoMarkerIfNecessary(buffer);
 				} else {
 					if (key == 'r') {
@@ -202,7 +200,7 @@ Void saevite_update(saevite_Saevite *saevite) {
 						}
 						breakfun();
 					}
-					saevite_buffer_insertChar(buffer, 0, cursorPosition, key);
+					saevite_buffer_cursorInsertChar(buffer, cursorIndex, key);
 				}
 
 				saevite_buffer_cursorMoveRelative(buffer, cursorIndex, 1);
@@ -410,19 +408,30 @@ Void test_1(Void) {
 
 	saevite_buffer_init(&buffer);
 
-	saevite_buffer_insertString(&buffer, 0, S("foo bar baz"));
-	saevite_buffer_insertString(&buffer, 3 + 1 + 3 + 1 + 3, S("Hello bro"));
-	saevite_buffer_insertString(&buffer, 3 * 3 + 2 + 5 + 1 + 3, S("mi amigo"));
+	saevite_buffer_cursorInsertString(&buffer, 0, S("foo bar baz"));
+	saevite_buffer_cursorMoveAbsolute(&buffer, 0, 11);
+	saevite_buffer_cursorInsertString(&buffer, 0, S("Hello bro"));
+	saevite_buffer_cursorMoveAbsolute(&buffer, 0, 20);
+	saevite_buffer_cursorInsertString(&buffer, 0, S("mi amigo"));
 
-	saevite_buffer_insertChar(&buffer, 0, 2, 'L');
-	saevite_buffer_insertChar(&buffer, 0, 3, 'o');
-	saevite_buffer_insertChar(&buffer, 0, 4, 'r');
-	saevite_buffer_insertChar(&buffer, 0, 5, 'r');
-	saevite_buffer_insertChar(&buffer, 0, 6, 'y');
-	saevite_buffer_deleteChar(&buffer, 0, 10);
-	saevite_buffer_deleteSelection(&buffer, 3, 2);
-	saevite_buffer_deleteSelection(&buffer, 22, 1);
-	saevite_buffer_insertString(&buffer, 22, S("HERE"));
+	saevite_buffer_cursorMoveAbsolute(&buffer, 0, 2);
+	saevite_buffer_cursorInsertChar(&buffer, 0, 'L');
+	saevite_buffer_cursorMoveRelative(&buffer, 0, 1);
+	saevite_buffer_cursorInsertChar(&buffer, 0, 'o');
+	saevite_buffer_cursorMoveRelative(&buffer, 0, 1);
+	saevite_buffer_cursorInsertChar(&buffer, 0, 'r');
+	saevite_buffer_cursorMoveRelative(&buffer, 0, 1);
+	saevite_buffer_cursorInsertChar(&buffer, 0, 'r');
+	saevite_buffer_cursorMoveRelative(&buffer, 0, 1);
+	saevite_buffer_cursorInsertChar(&buffer, 0, 'y');
+	saevite_buffer_cursorMoveAbsolute(&buffer, 0, 10);
+	saevite_buffer_cursorDeleteChar(&buffer, 0);
+	saevite_buffer_cursorMoveAbsolute(&buffer, 0, 3);
+	saevite_buffer_cursorDeleteSelection(&buffer, 0, 2);
+	saevite_buffer_cursorMoveAbsolute(&buffer, 0, 22);
+	saevite_buffer_cursorDeleteSelection(&buffer, 0, 1);
+	saevite_buffer_cursorMoveAbsolute(&buffer, 0, 22);
+	saevite_buffer_cursorInsertString(&buffer, 0, S("HERE"));
 
 	finishTest(S("1"), &buffer, S("foLryo br bazHello broHEREi amigo"));
 }
@@ -433,10 +442,13 @@ Void test_2(Void) {
 
 	saevite_buffer_init(&buffer);
 
-	saevite_buffer_insertChar(&buffer, 0, 0, 'e');
-	saevite_buffer_insertChar(&buffer, 0, 1, 'd');
-	saevite_buffer_insertChar(&buffer, 0, 2, 'o');
-	saevite_buffer_deleteChar(&buffer, 0, 1);
+	saevite_buffer_cursorInsertChar(&buffer, 0, 'e');
+	saevite_buffer_cursorMoveRelative(&buffer, 0, 1);
+	saevite_buffer_cursorInsertChar(&buffer, 0, 'd');
+	saevite_buffer_cursorMoveRelative(&buffer, 0, 1);
+	saevite_buffer_cursorInsertChar(&buffer, 0, 'o');
+	saevite_buffer_cursorMoveRelative(&buffer, 0, -1);
+	saevite_buffer_cursorDeleteChar(&buffer, 0);
 
 	saevite_stringFromBuffer(&buffer, &result);
 	finishTest(S("2"), &buffer, S("eo"));
@@ -448,14 +460,20 @@ Void test_3(Void) {
 
 	saevite_buffer_init(&buffer);
 
-	saevite_buffer_insertChar(&buffer, 0, 0, 'e');
-	saevite_buffer_insertChar(&buffer, 0, 1, 'd');
-	saevite_buffer_insertChar(&buffer, 0, 2, 'o');
-	assert(saevite_buffer_deleteChar(&buffer, 0, 0) == 0);
-	assert(saevite_buffer_deleteChar(&buffer, 0, 0) == 0);
-	assert(saevite_buffer_deleteChar(&buffer, 0, 0) == 0);
-	assert(saevite_buffer_deleteChar(&buffer, 0, 0) != 0);
-	assert(saevite_buffer_deleteChar(&buffer, 0, 0) != 0);
+	saevite_buffer_cursorInsertChar(&buffer, 0, 'e');
+	saevite_buffer_cursorMoveRelative(&buffer, 0, 1);
+	saevite_buffer_cursorInsertChar(&buffer, 0, 'd');
+	saevite_buffer_cursorMoveRelative(&buffer, 0, 1);
+	saevite_buffer_cursorInsertChar(&buffer, 0, 'o');
+	assert(saevite_buffer_cursorDeleteChar(&buffer, 0) == 0);
+	saevite_buffer_cursorMoveRelative(&buffer, 0, -1);
+	assert(saevite_buffer_cursorDeleteChar(&buffer, 0) == 0);
+	saevite_buffer_cursorMoveRelative(&buffer, 0, -1);
+	assert(saevite_buffer_cursorDeleteChar(&buffer, 0) == 0);
+	saevite_buffer_cursorMoveRelative(&buffer, 0, -1);
+	assert(saevite_buffer_cursorDeleteChar(&buffer, 0) != 0);
+	saevite_buffer_cursorMoveRelative(&buffer, 0, -1);
+	assert(saevite_buffer_cursorDeleteChar(&buffer, 0) != 0);
 
 	saevite_stringFromBuffer(&buffer, &result);
 	finishTest(S("3"), &buffer, S(""));
@@ -467,16 +485,23 @@ Void test_4(Void) {
 
 	saevite_buffer_init(&buffer);
 
-	saevite_buffer_insertChar(&buffer, 0, 0, 'a');
-	saevite_buffer_insertChar(&buffer, 0, 1, 'b');
-	saevite_buffer_insertChar(&buffer, 0, 2, 'c');
-	saevite_buffer_insertChar(&buffer, 0, 3, 'd');
-	saevite_buffer_insertChar(&buffer, 0, 4, 'e');
-	saevite_buffer_insertChar(&buffer, 0, 5, 'f');
-	assert(saevite_buffer_deleteChar(&buffer, 0, 5) == 0);
-	assert(saevite_buffer_deleteChar(&buffer, 0, 4) == 0);
-	saevite_buffer_insertChar(&buffer, 0, 4, 'E');
-	saevite_buffer_insertChar(&buffer, 0, 5, 'F');
+	saevite_buffer_cursorInsertChar(&buffer, 0, 'a');
+	saevite_buffer_cursorMoveRelative(&buffer, 0, 1);
+	saevite_buffer_cursorInsertChar(&buffer, 0, 'b');
+	saevite_buffer_cursorMoveRelative(&buffer, 0, 1);
+	saevite_buffer_cursorInsertChar(&buffer, 0, 'c');
+	saevite_buffer_cursorMoveRelative(&buffer, 0, 1);
+	saevite_buffer_cursorInsertChar(&buffer, 0, 'd');
+	saevite_buffer_cursorMoveRelative(&buffer, 0, 1);
+	saevite_buffer_cursorInsertChar(&buffer, 0, 'e');
+	saevite_buffer_cursorMoveRelative(&buffer, 0, 1);
+	saevite_buffer_cursorInsertChar(&buffer, 0, 'f');
+	assert(saevite_buffer_cursorDeleteChar(&buffer, 0) == 0);
+	saevite_buffer_cursorMoveRelative(&buffer, 0, -1);
+	assert(saevite_buffer_cursorDeleteChar(&buffer, 0) == 0);
+	saevite_buffer_cursorInsertChar(&buffer, 0, 'E');
+	saevite_buffer_cursorMoveRelative(&buffer, 0, 1);
+	saevite_buffer_cursorInsertChar(&buffer, 0, 'F');
 
 	saevite_stringFromBuffer(&buffer, &result);
 	finishTest(S("4"), &buffer, S("abcdEF"));
@@ -488,17 +513,23 @@ Void test_5(Void) {
 
 	saevite_buffer_init(&buffer);
 
-	saevite_buffer_insertChar(&buffer, 0, 0, 'a');
-	saevite_buffer_insertChar(&buffer, 0, 1, 'b');
-	saevite_buffer_insertChar(&buffer, 0, 2, 'c');
+	saevite_buffer_cursorInsertChar(&buffer, 0, 'a');
+	saevite_buffer_cursorMoveRelative(&buffer, 0, 1);
+	saevite_buffer_cursorInsertChar(&buffer, 0, 'b');
+	saevite_buffer_cursorMoveRelative(&buffer, 0, 1);
+	saevite_buffer_cursorInsertChar(&buffer, 0, 'c');
+	saevite_buffer_cursorMoveRelative(&buffer, 0, 1);
 
 	saevite_buffer_addUndoMarkerIfNecessary(&buffer);
-	saevite_buffer_insertChar(&buffer, 0, 3, '\n');
+	saevite_buffer_cursorInsertChar(&buffer, 0, '\n');
+	saevite_buffer_cursorMoveRelative(&buffer, 0, 1);
 	saevite_buffer_addUndoMarkerIfNecessary(&buffer);
 
-	saevite_buffer_insertChar(&buffer, 0, 4, 'd');
-	saevite_buffer_insertChar(&buffer, 0, 5, 'e');
-	saevite_buffer_insertChar(&buffer, 0, 6, 'f');
+	saevite_buffer_cursorInsertChar(&buffer, 0, 'd');
+	saevite_buffer_cursorMoveRelative(&buffer, 0, 1);
+	saevite_buffer_cursorInsertChar(&buffer, 0, 'e');
+	saevite_buffer_cursorMoveRelative(&buffer, 0, 1);
+	saevite_buffer_cursorInsertChar(&buffer, 0, 'f');
 
 	saevite_buffer_undo(&buffer);
 

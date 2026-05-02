@@ -462,10 +462,12 @@ Void saevite__buffer_newPieceReplace(saevite_Buffer *buffer, Uint currentPiecesP
 	saevite__buffer_pieceReplace(buffer, currentPiecesPosition, pieceIndex);
 }
 
-Void saevite_buffer_insertString(saevite_Buffer *buffer, Uint position, String8 str) {
+Void saevite_buffer_cursorInsertString(saevite_Buffer *buffer, Uint cursorIndex, String8 str) {
 	String8 oldStr = {0};
 	Uint pieceIndex = 0, len = 0;
 	Int err = 0;
+	saevite_Cursor *cursor = &buffer->cursors.items[cursorIndex];
+	const Uint position = cursor->position;
 
 	err = saevite__buffer_getPieceInfoFromPosition(buffer, position, &pieceIndex, &len);
 
@@ -491,7 +493,7 @@ Void saevite_buffer_insertString(saevite_Buffer *buffer, Uint position, String8 
 	}
 }
 
-Void saevite_buffer_insertChar(saevite_Buffer *buffer, Int cursorIndex, Uint position, Char c) {
+Void saevite_buffer_cursorInsertChar(saevite_Buffer *buffer, Int cursorIndex, Char c) {
 	/*
 	 * @todo
 	 * refactor this function, there is a lot of duplicated code
@@ -503,6 +505,7 @@ Void saevite_buffer_insertChar(saevite_Buffer *buffer, Int cursorIndex, Uint pos
 	Uint cpIndex = 0;
 	Int err = 0;
 	saevite_Cursor *cursor = &buffer->cursors.items[cursorIndex];
+	const Uint position = cursor->position;
 	const saevite_Action *action = &buffer->actions.items[cursor->lastActionIndex];
 
 	if (
@@ -538,7 +541,6 @@ Void saevite_buffer_insertChar(saevite_Buffer *buffer, Int cursorIndex, Uint pos
 		if (buffer->currentPieces.len > 0) {
 			err = saevite__buffer_getPieceInfoFromPosition(buffer, position, &pieceIndex, &len);
 		}
-
 		if (buffer->currentPieces.len <= 0 || err) {
 			if (position == 0) {
 				saevite__buffer_pieceInsert(buffer, 0, cpIndex);
@@ -570,7 +572,7 @@ Void saevite_buffer_insertChar(saevite_Buffer *buffer, Int cursorIndex, Uint pos
 	}
 }
 
-Void saevite_buffer_deleteSelection(saevite_Buffer *buffer, Uint position, Uint len) {
+Void saevite_buffer_cursorDeleteSelection(saevite_Buffer *buffer, Uint cursorIndex, Uint len) {
 	/* @todo @optimize
 	 * saevite__buffer_getPieceInfoFromPosition does the same work twice
 	 */
@@ -579,6 +581,8 @@ Void saevite_buffer_deleteSelection(saevite_Buffer *buffer, Uint position, Uint 
 	Uint firstLen = 0, lastLen = 0;
 	String8 firstStr = {0}, lastStr = {0};
 	String8 newFirstStr = {0}, newLastStr = {0};
+	saevite_Cursor *cursor = &buffer->cursors.items[cursorIndex];
+	const Uint position = cursor->position;
 
 	saevite__buffer_getPieceInfoFromPosition(buffer, position, &firstPieceIndex, &firstLen);
 	saevite__buffer_getPieceInfoFromPosition(buffer, position + len, &lastPieceIndex, &lastLen);
@@ -601,7 +605,7 @@ Void saevite_buffer_deleteSelection(saevite_Buffer *buffer, Uint position, Uint 
 	}
 }
 
-Int saevite_buffer_deleteChar(saevite_Buffer *buffer, Int cursorIndex, Uint position) {
+Int saevite_buffer_cursorDeleteChar(saevite_Buffer *buffer, Int cursorIndex) {
 	/*
 	 * @todo
 	 * refactor this function, there is a lot of duplicated code
@@ -610,6 +614,7 @@ Int saevite_buffer_deleteChar(saevite_Buffer *buffer, Int cursorIndex, Uint posi
 	Uint pieceIndex = 0, len = 0, lastBegin = 0;
 	String8 str = {0};
 	saevite_Cursor *cursor = &buffer->cursors.items[cursorIndex];
+	const Uint position = cursor->position;
 	const saevite_Action *action = &buffer->actions.items[cursor->lastActionIndex];
 
 	if (buffer->currentPieces.len <= 0) {
