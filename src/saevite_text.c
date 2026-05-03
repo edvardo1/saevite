@@ -640,15 +640,13 @@ Int saevite_buffer_cursorDeleteChar(saevite_Buffer *buffer, Int cursorIndex) {
 	
 		if (lastBegin - str.len > 0 && len > 0) {
 			saevite__buffer_newPieceReplace(buffer, pieceIndex, strSlice(str, lastBegin, str.len - lastBegin));
+			saevite__buffer_newPieceInsert(buffer, pieceIndex, strSlice(str, 0, len));
 
 			cursor->mode &= ~(U32)saevite_CursorMode_InsertingChars;
 			cursor->mode |= saevite_CursorMode_DeletingChars;
-
 			cursor->lastPosition = position;
 			cursor->lastActionIndex = buffer->actionsTop - 1;
 			cursor->lastCharAllPiecesIndex = buffer->currentPieces.items[pieceIndex];
-
-			saevite__buffer_newPieceInsert(buffer, pieceIndex, strSlice(str, 0, len));
 		} else if (lastBegin - str.len > 0) {
 			saevite__buffer_newPieceReplace(buffer, pieceIndex, strSlice(str, lastBegin, str.len - lastBegin));
 
