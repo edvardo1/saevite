@@ -221,7 +221,7 @@ Void drawCursor(saevite_Saevite *saevite, I32 xPos, I32 yPos, I32 ascent, I32 de
 		xPos,
 		yPos - ascent,
 		5,
-		yPos - descent - yPos + ascent
+		ascent - descent
 	);
 
 	gooey_setDrawColor(saevite->gctx, 0x8888bbff);
@@ -274,7 +274,8 @@ npunicode_Utf8IteratorDecoder_FunctionReturn iterator(Void *data) {
 }
 
 Void saevite_renderBuffer(saevite_Saevite *saevite, saevite_Buffer *buffer) {
-	I32 xPos = 100, yPos = 100, yDiff = 0;
+	const I32 xPosInit = 0, yPosInit = 0;
+	I32 xPos = xPosInit, yPos = yPosInit, yDiff = 0;
 	npfont_GlyphInfo gi = {0};
 	U32 codepoint = 0;
 	Bool isTab;
@@ -293,6 +294,7 @@ Void saevite_renderBuffer(saevite_Saevite *saevite, saevite_Buffer *buffer) {
 	defaultDescent *= defaultFontSize;
 	defaultLineGap *= defaultFontSize;
 	defaultYDiff = defaultAscent - defaultDescent + defaultLineGap;
+	yPos += defaultAscent;
 
 	iteratorData.buffer = buffer;
 
@@ -307,7 +309,7 @@ Void saevite_renderBuffer(saevite_Saevite *saevite, saevite_Buffer *buffer) {
 			if (saevite_buffer_hasCursorInPosition(buffer, byteCount)) {
 				drawCursor(saevite, xPos, yPos, defaultAscent, defaultDescent);
 			}
-			xPos = 100;
+			xPos = xPosInit;
 			yPos += yDiff;
 			yDiff = defaultYDiff;
 			continue;
@@ -320,8 +322,11 @@ Void saevite_renderBuffer(saevite_Saevite *saevite, saevite_Buffer *buffer) {
 		}
 
 		npfont_getGlyphInfo(saevite->fctx, &codepoint, 1, &gi);
+		gi.ascent *= gi.fontSize;
+		gi.descent *= gi.fontSize;
+		gi.lineGap *= gi.fontSize;
 
-		yDiff = MAX(yDiff, (gi.ascent - gi.descent + gi.lineGap) * gi.fontSize);
+		yDiff = MAX(yDiff, gi.ascent - gi.descent + gi.lineGap);
 
 		if (gi.textureIndex != npfont_NO_TEXTURE) {
 			gooey_Texture texture = saevite->fctx->textures.items[gi.textureIndex];
@@ -343,8 +348,8 @@ Void saevite_renderBuffer(saevite_Saevite *saevite, saevite_Buffer *buffer) {
 
 		if (isTab) {
 			xPos =
-				100 +
-				((xPos - 100) / (I32)(gi.xAdvance * 4)) * (I32)(gi.xAdvance * 4) +
+				xPosInit +
+				((xPos - xPosInit) / (I32)(gi.xAdvance * 4)) * (I32)(gi.xAdvance * 4) +
 				(I32)(gi.xAdvance * 4);
 		} else {
 			xPos += gi.xAdvance;
