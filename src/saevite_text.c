@@ -610,6 +610,9 @@ Int saevite_buffer_cursorDeleteChar(saevite_Buffer *buffer, Int cursorIndex) {
 	 * @todo
 	 * refactor this function, there is a lot of duplicated code
 	 * here for dealing with the piece optimizations
+	 *
+	 * this shit actually needs some HEAVY refactoring
+	 * this is actually fucking incomprehensible
 	 */
 	Uint pieceIndex = 0, len = 0, lastBegin = 0;
 	String8 str = {0};
