@@ -135,4 +135,6 @@ saevite_Action saevite_action_remove(U32 index, U32 before);
 saevite_Action saevite_action_undoMarker(Void);
 saevite_Action saevite_action_moveCursor(U32 index, U32 previousPosition, U32 nextPosition);
 
+Bool saevite_buffer_hasCursorInPosition(saevite_Buffer *buffer, Int position);
+
 #endif /* !defined(SAEVITE_TEXT_H) */

@@ -778,3 +778,17 @@ Void saevite__buffer_setCursorModesToNone(saevite_Buffer *buffer) {
 		buffer->cursors.items[cursorIndex].mode = saevite_CursorMode_None;
 	}
 }
+
+Bool saevite_buffer_hasCursorInPosition(saevite_Buffer *buffer, Int position) {
+	Uint cursorIndex = 0;
+	Uint max = saevite_buffer_getCursorAmount(buffer);
+	Int cursorPosition = 0;
+
+	for (cursorIndex = 0; cursorIndex < max; cursorIndex += 1) {
+		saevite_buffer_getCursorPosition(buffer, cursorIndex, &cursorPosition);
+		if (position == cursorPosition) {
+			return true;
+		}
+	}
+	return false;
+}

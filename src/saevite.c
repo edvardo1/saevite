@@ -228,20 +228,6 @@ Void drawCursor(saevite_Saevite *saevite, I32 xPos, I32 yPos, I32 ascent, I32 de
 	gooey_fillRect(saevite->gctx, cursorRect);
 }
 
-Bool saevite_buffer_hasCursorInPosition(saevite_Buffer *buffer, Int position) {
-	Uint cursorIndex = 0;
-	Uint max = saevite_buffer_getCursorAmount(buffer);
-	Int cursorPosition = 0;
-
-	for (cursorIndex = 0; cursorIndex < max; cursorIndex += 1) {
-		saevite_buffer_getCursorPosition(buffer, cursorIndex, &cursorPosition);
-		if (position == cursorPosition) {
-			return true;
-		}
-	}
-	return false;
-}
-
 typedef struct {
 	saevite_Buffer *buffer;
 	Uint currentPiecesIndex;
