@@ -792,3 +792,19 @@ Bool saevite_buffer_hasCursorInPosition(saevite_Buffer *buffer, Int position) {
 	}
 	return false;
 }
+
+Uint saevite_buffer_getPiecesAmount(saevite_Buffer *buffer) {
+	return buffer->currentPieces.len;
+}
+
+Int saevite_buffer_getPieceString(saevite_Buffer *buffer, String8 *string, Uint index) {
+	if (index < buffer->currentPieces.len) {
+		*string = buffer->allPieces.items[
+			buffer->currentPieces.items[
+					index
+			]
+		];
+		return 0;
+	}
+	return 1;
+}

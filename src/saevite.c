@@ -230,30 +230,30 @@ Void drawCursor(saevite_Saevite *saevite, I32 xPos, I32 yPos, I32 ascent, I32 de
 
 typedef struct {
 	saevite_Buffer *buffer;
-	Uint currentPiecesIndex;
+	Uint piecesIndex;
 	Uint stringIndex;
 } IteratorData;
 
 npunicode_Utf8IteratorDecoder_FunctionReturn iterator(Void *data) {
 	npunicode_Utf8IteratorDecoder_FunctionReturn result = {0};
 	IteratorData *idata = data;
-	String8 *string = {0};
+	String8 string = {0};
+	Uint piecesAmount = 0;
 
 	for (;;) {
-		if (idata->currentPiecesIndex >= idata->buffer->currentPieces.len) {
+		piecesAmount = saevite_buffer_getPiecesAmount(idata->buffer);
+		if (idata->piecesIndex >= piecesAmount) {
 			result.ok = false;
 			return result;
 		}
-		string = &idata->buffer->allPieces.items[
-			idata->buffer->currentPieces.items[idata->currentPiecesIndex]
-		];
-		if (idata->stringIndex < string->len) {
+		saevite_buffer_getPieceString(idata->buffer, &string, idata->piecesIndex);
+		if (idata->stringIndex < string.len) {
 			result.ok = true;
-			result.byte = string->buf[idata->stringIndex];
+			result.byte = string.buf[idata->stringIndex];
 			idata->stringIndex += 1;
 			return result;
 		} else {
-			idata->currentPiecesIndex += 1;
+			idata->piecesIndex += 1;
 			idata->stringIndex = 0;
 		}
 	}
@@ -346,7 +346,7 @@ Void saevite_renderBuffer(saevite_Saevite *saevite, saevite_Buffer *buffer) {
 		drawCursor(saevite, xPos, yPos, defaultAscent, defaultDescent);
 	}
 
-	if (buffer->currentPieces.len == 0) {
+	if (saevite_buffer_getPiecesAmount(buffer) == 0) {
 		drawCursor(saevite, xPos, yPos, defaultAscent, defaultDescent);
 	}
 }
