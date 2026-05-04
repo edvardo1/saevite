@@ -702,6 +702,10 @@ Void saevite_buffer_cursorMoveAbsolute(saevite_Buffer *buffer, Uint index, Uint 
 	U32 lastPosition = cursor->position;
 	U32 newPosition = position;
 
+	if (position > buffer->len) {
+		return;
+	}
+
 	if (cursor->mode & saevite_CursorMode_Moving) {
 		assert(cursor->lastMovePosition == lastPosition);
 		action = &buffer->actions.items[cursor->lastMoveActionIndex];
