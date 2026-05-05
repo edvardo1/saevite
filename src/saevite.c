@@ -574,11 +574,8 @@ Void test_7(Void) {
 	saevite_buffer_cursorMoveRelative(&buffer, 0, -1);
 	saevite_buffer_cursorMoveRelative(&buffer, 0, -1);
 	saevite_buffer_cursorMoveRelative(&buffer, 0, -1);
-	saevite_printBuffer(&buffer, 0);
 	saevite_buffer_cursorDeleteChar(&buffer, 0); saevite_buffer_cursorMoveRelative(&buffer, 0, -1);
-	saevite_printBuffer(&buffer, 0);
 	saevite_buffer_cursorDeleteChar(&buffer, 0); saevite_buffer_cursorMoveRelative(&buffer, 0, -1);
-	saevite_printBuffer(&buffer, 0);
 
 	saevite_stringFromBuffer(&buffer, &result);
 	finishTest(S("7"), &buffer, S("abcde {\n}"));
@@ -607,6 +604,10 @@ Void processArgs(Int argc, Char **argv, saevite_Saevite *saevite) {
 		argc--;
 	}
 }
+
+void gooeyws_init(gooey_Ctx *gctx, Void **data);
+void gooeyws_update(Void *data);
+void gooeyws_render(Void *data);
 
 Int main(Int argc, Char **argv) {
 	gooey_Ctx gctx = {0};
