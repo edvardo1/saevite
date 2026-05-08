@@ -691,19 +691,21 @@ Void saevite_buffer_addUndoMarkerIfNecessary(saevite_Buffer *buffer) {
 	}
 }
 
-Void saevite_buffer_cursorMoveRelative(saevite_Buffer *buffer, Uint index, Int offset) {
+/* returns 0 if the cursor moved, 1 if it didn't move */
+Int saevite_buffer_cursorMoveRelative(saevite_Buffer *buffer, Uint index, Int offset) {
 	U32 newPosition = buffer->cursors.items[index].position + offset;
-	saevite_buffer_cursorMoveAbsolute(buffer, index, newPosition);
+	return saevite_buffer_cursorMoveAbsolute(buffer, index, newPosition);
 }
 
-Void saevite_buffer_cursorMoveAbsolute(saevite_Buffer *buffer, Uint index, Uint position) {
+/* returns 0 if the cursor moved, 1 if it didn't move */
+Int saevite_buffer_cursorMoveAbsolute(saevite_Buffer *buffer, Uint index, Uint position) {
 	saevite_Cursor *cursor = &buffer->cursors.items[index];
 	saevite_Action *action = NULL;
 	U32 lastPosition = cursor->position;
 	U32 newPosition = position;
 
 	if (position > buffer->len) {
-		return;
+		return 1;
 	}
 
 	if (cursor->mode & saevite_CursorMode_Moving) {
@@ -713,6 +715,7 @@ Void saevite_buffer_cursorMoveAbsolute(saevite_Buffer *buffer, Uint index, Uint 
 		action->data.moveCursor.nextPosition = newPosition;
 		cursor->position = newPosition;
 		cursor->lastMovePosition = newPosition;
+		return 0;
 	} else {
 		buffer->actions.len = MIN(buffer->actionsTop, buffer->actions.len);
 		daAppend(
@@ -725,6 +728,7 @@ Void saevite_buffer_cursorMoveAbsolute(saevite_Buffer *buffer, Uint index, Uint 
 		cursor->mode |= saevite_CursorMode_Moving;
 		cursor->lastMovePosition = newPosition;
 		cursor->lastMoveActionIndex = buffer->actions.len - 1;
+		return 0;
 	}
 }
 

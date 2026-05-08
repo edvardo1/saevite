@@ -132,8 +132,8 @@ Int  saevite_buffer_cursorDeleteChar(saevite_Buffer *buffer, Int cursorIndex);
 
 Void saevite_buffer_addUndoMarkerIfNecessary(saevite_Buffer *buffer);
 
-Void saevite_buffer_cursorMoveRelative(saevite_Buffer *buffer, Uint index, Int offset);
-Void saevite_buffer_cursorMoveAbsolute(saevite_Buffer *buffer, Uint index, Uint position);
+Int saevite_buffer_cursorMoveRelative(saevite_Buffer *buffer, Uint index, Int offset);
+Int saevite_buffer_cursorMoveAbsolute(saevite_Buffer *buffer, Uint index, Uint position);
 
 saevite_Action saevite_action_replace(U32 index, U32 before, U32 after);
 saevite_Action saevite_action_insert(U32 index, U32 after);

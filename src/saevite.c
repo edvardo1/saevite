@@ -146,15 +146,16 @@ Void saevite_update(saevite_Saevite *saevite) {
 
 				lastWasMove = false;
 			} else if (key == 8) {
-				saevite_buffer_cursorMoveRelative(buffer, cursorIndex, -1);
-				saevite_buffer_cursorDeleteChar(buffer, 0);
-				saevite->drawingNecessary = true;
+				if (saevite_buffer_cursorMoveRelative(buffer, cursorIndex, -1) == 0) {
+					saevite_buffer_cursorDeleteChar(buffer, 0);
+					saevite->drawingNecessary = true;
 
-				if (saevite->doPrintBuffer) {
-					saevite_printBuffer(buffer, saevite->actionsPrinted);
+					if (saevite->doPrintBuffer) {
+						saevite_printBuffer(buffer, saevite->actionsPrinted);
+					}
+
+					lastWasMove = false;
 				}
-
-				lastWasMove = false;
 			} else if (key == SDLK_LEFT) {
 				/* @todo change this from SDL to gooey */
 				if (!lastWasMove) {
