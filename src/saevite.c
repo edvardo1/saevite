@@ -110,8 +110,6 @@ Bool saevite_windowShouldClose(saevite_Saevite *saevite) {
 	return gooey_windowShouldClose(saevite->gctx);
 }
 
-void breakfun(void) {}
-
 Void saevite_update(saevite_Saevite *saevite) {
 	saevite_Window *window = &saevite->windows.items[0];
 	saevite_Buffer *buffer = &saevite->buffers.items[window->bufferIndex];
