@@ -103,6 +103,12 @@ struct saevite_Buffer {
 	Uint actionsTop;
 
 	String8 name;
+
+	/*
+	 * these fields are extra buffer data that will be moved to a map later,
+	 * plugins will be able to create, read, modify, and delete them at will
+	 */
+	String8 filename;
 };
 
 Void saevite_buffer_init(saevite_Buffer *buffer);
