@@ -606,10 +606,6 @@ Void processArgs(Int argc, Char **argv, saevite_Saevite *saevite) {
 	}
 }
 
-void gooeyws_init(gooey_Ctx *gctx, Void **data);
-void gooeyws_update(Void *data);
-void gooeyws_render(Void *data);
-
 Int main(Int argc, Char **argv) {
 	gooey_Ctx gctx = {0};
 	saevite_Saevite saevite = {0};
