@@ -199,11 +199,8 @@ Void saevite_update(saevite_Saevite *saevite) {
 					saevite_buffer_cursorInsertChar(buffer, cursorIndex, key);
 					saevite_buffer_addUndoMarkerIfNecessary(buffer);
 				} else {
-					if (key == 'r') {
-						if (saevite->doPrintBuffer) {
-							saevite_printBuffer(buffer, saevite->actionsPrinted);
-						}
-						breakfun();
+					if (saevite->doPrintBuffer) {
+						saevite_printBuffer(buffer, saevite->actionsPrinted);
 					}
 					saevite_buffer_cursorInsertChar(buffer, cursorIndex, key);
 				}
