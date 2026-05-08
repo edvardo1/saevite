@@ -29,6 +29,11 @@ typedef struct {
 } saevite_Tab;
 
 typedef struct {
+	Bool doPrintBuffer;
+	Int actionsPrinted;
+} saevite_Args;
+
+typedef struct {
 	gooey_Ctx *gctx;
 	npfont_Ctx *fctx;
 
@@ -582,23 +587,23 @@ Void test_7(Void) {
 	finishTest(S("7"), &buffer, S("abcde {\n}"));
 }
 
-Void processArgs(Int argc, Char **argv, saevite_Saevite *saevite) {
+Void processArgs(Int argc, Char **argv, saevite_Args *sargs) {
 	argv++;
 	argc--;
-	saevite->actionsPrinted = -1;
+	sargs->actionsPrinted = -1;
 
 	while (argc != 0) {
 		if (strcmp(argv[0], "+pb") == 0) {
-			saevite->doPrintBuffer = true;
-		} else if (strcmp(argv[0], "-pb") == 0) {
-			saevite->doPrintBuffer = false;
+			sargs->doPrintBuffer = true;
 		}
 
-		if (strcmp(argv[0], "pactions") == 0) {
+		if (strcmp(argv[0], "-pb") == 0) {
+			sargs->doPrintBuffer = false;
+		} else if (strcmp(argv[0], "pactions") == 0) {
 			assert(argc > 1);
 			argc--;
 			argv++;
-			saevite->actionsPrinted = atoi(argv[0]);
+			sargs->actionsPrinted = atoi(argv[0]);
 		}
 
 		argv++;
@@ -606,14 +611,24 @@ Void processArgs(Int argc, Char **argv, saevite_Saevite *saevite) {
 	}
 }
 
+
+Void saevite_init(saevite_Saevite *saevite, saevite_Args *sargs) {
+	saevite->doPrintBuffer = sargs->doPrintBuffer;
+	saevite->actionsPrinted = sargs->actionsPrinted;
+
+	daAppendZ(&saevite->buffers);
+	saevite_buffer_init(&saevite->buffers.items[saevite->buffers.len - 1]);
+	daAppendZ(&saevite->windows);
+	saevite->windows.items[0].bufferIndex = 0;
+}
+
 Int main(Int argc, Char **argv) {
 	gooey_Ctx gctx = {0};
 	saevite_Saevite saevite = {0};
+	saevite_Args sargs = {0};
 
 	saevite.gctx = &gctx;
 	saevite.drawingNecessary = true;
-
-	processArgs(argc, argv, &saevite);
 
 	test_1();
 	test_2();
@@ -623,10 +638,8 @@ Int main(Int argc, Char **argv) {
 	test_6();
 	test_7();
 
-	daAppendZ(&saevite.buffers);
-	saevite_buffer_init(&saevite.buffers.items[saevite.buffers.len - 1]);
-	daAppendZ(&saevite.windows);
-	saevite.windows.items[0].bufferIndex = 0;
+	processArgs(argc, argv, &sargs);
+	saevite_init(&saevite, &sargs);
 
 	saevite_openWindow(&saevite);
 	while (!saevite_windowShouldClose(&saevite)) {
