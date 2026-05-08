@@ -31,6 +31,7 @@ typedef struct {
 typedef struct {
 	Bool doPrintBuffer;
 	Int actionsPrinted;
+	DynamicArray(String8) filenames;
 } saevite_Args;
 
 typedef struct {
@@ -595,15 +596,15 @@ Void processArgs(Int argc, Char **argv, saevite_Args *sargs) {
 	while (argc != 0) {
 		if (strcmp(argv[0], "+pb") == 0) {
 			sargs->doPrintBuffer = true;
-		}
-
-		if (strcmp(argv[0], "-pb") == 0) {
+		} else if (strcmp(argv[0], "-pb") == 0) {
 			sargs->doPrintBuffer = false;
 		} else if (strcmp(argv[0], "pactions") == 0) {
 			assert(argc > 1);
 			argc--;
 			argv++;
 			sargs->actionsPrinted = atoi(argv[0]);
+		} else {
+			daAppend(&sargs->filenames, S(argv[0]));
 		}
 
 		argv++;
@@ -613,6 +614,7 @@ Void processArgs(Int argc, Char **argv, saevite_Args *sargs) {
 
 
 Void saevite_init(saevite_Saevite *saevite, saevite_Args *sargs) {
+	String8 fileStr = {0};
 	saevite->doPrintBuffer = sargs->doPrintBuffer;
 	saevite->actionsPrinted = sargs->actionsPrinted;
 
@@ -620,6 +622,20 @@ Void saevite_init(saevite_Saevite *saevite, saevite_Args *sargs) {
 	saevite_buffer_init(&saevite->buffers.items[saevite->buffers.len - 1]);
 	daAppendZ(&saevite->windows);
 	saevite->windows.items[0].bufferIndex = 0;
+
+	if (sargs->filenames.items[0].buf != NULL) {
+		readWholeFile(
+			sargs->filenames.items[0].buf, 
+			(U8 **)&fileStr.buf,
+			&fileStr.len
+		);
+		saevite_buffer_cursorInsertString(
+			&saevite->buffers.items[0],
+			0,
+			fileStr
+		);
+		saevite_buffer_addUndoMarkerIfNecessary(&saevite->buffers.items[0]);
+	}
 }
 
 Int main(Int argc, Char **argv) {
